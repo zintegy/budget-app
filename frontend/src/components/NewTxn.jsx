@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import axios from 'axios';
-import ErrorView from './ErrorView';
 import TextInput from './TextInput';
 import SelectInput from './SelectInput';
 
@@ -123,11 +122,9 @@ class NewTxn extends Component {
           label={(txnType == TRANSFER ? "Destination " : "") + "Account"}
           error={errors["account"]}
           />
-        <button onClick={this.addTxn}>Add Txn</button>
-        <ErrorView 
-          errors={errors}
-          />
-
+        <button 
+          className="newTxnSubmit" 
+          onClick={this.addTxn}>Add Txn</button>
       </div>
     );
   }

@@ -1,14 +1,18 @@
 #newTxnForm {
   display: inline-block;
   background-color: #cccccc;
-  width:1500px;
+  width: 900px;
+}
+
+.newTxnSubmit {
+  position: relative;
 }
 
 #newTxnForm .inputDiv {
   float: left;
-  width:100em;
-  display: inline-block;
+  display:block;
   margin-bottom: 0.2em;
+  width:100%
 }
 
 #newTxnForm input,select {
@@ -19,17 +23,13 @@
 #newTxnForm label {
   float: left;
   text-align: right;
-  width: 20em;
+  position: relative;
+  width: 10em;
 }
 
 #newTxnForm .inputError {
   color: #dd0000;
+  position: relative;
   float: left;
-  text-align: right;
 }
-
-
-
-
-
 
