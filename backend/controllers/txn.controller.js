@@ -8,7 +8,7 @@ TxnController.search = (req, res, next) => {
   if (req.query.merchant) {
     req.query.capitalMerchant = req.query.merchant;
   }
-  Txn.find(req.query)
+  Txn.find(req.query).sort([["txnDate", -1]])
     .then(data => res.json(data))
     .catch(next);
 };
