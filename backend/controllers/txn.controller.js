@@ -14,10 +14,26 @@ TxnController.search = (req, res, next) => {
 };
 
 TxnController.create = (req, res, next) => {
+  if (req.body.txnType != "Expense") {
+    req.body.merchant = null;
+  }
+
+  if (req.body.txnType != "Income") {
+    req.body.expenseCategory = null;
+  }
+
+  if (req.body.txnType != "Transfer") {
+    req.body.sourceAccount = null;
+  }
+  else {
+    req.body.category = null;
+  }
+
+
   if (req.body.merchant) {
     req.body.capitalMerchant = req.body.merchant;
   }
-  Txn.create(req.body)
+    Txn.create(req.body)
     .then(data => res.json(data))
     .catch(data => {
       res.json(

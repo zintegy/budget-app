@@ -1,4 +1,5 @@
-import './App.css';
+import React, {Component} from 'react';
+import './styles/App.scss';
 
 import TxnApp from './components/TxnApp';
 

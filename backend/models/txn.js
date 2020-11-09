@@ -18,7 +18,10 @@ const txnSchema = new Schema({
   },
   merchant : {
     type : String, 
-    required: [function() {return this.txnType == "Expense"}, "Merchant is required"]
+    required: [
+      function() {return this.txnType == "Expense"}, 
+      "Merchant is required"
+    ]
   },
   account : {
     type : String,
@@ -31,10 +34,13 @@ const txnSchema = new Schema({
 
   category : {
     type: String,
-    required: [function() {
-      return this.txnType == "Expense" || (
-        this.txnType == "Income" && this.expenseCategory == "");
-      }, "Category is required"]
+    required: [
+      function() {
+        return this.txnType == "Expense" || (
+          this.txnType == "Income" && this.expenseCategory == "");
+      }, 
+      "Category is required"
+    ]
   },
 
   expenseCategory : {
@@ -49,7 +55,10 @@ const txnSchema = new Schema({
 
   sourceAccount : {
     type: String, 
-    required: [function() {return this.txnType == "Transfer"}, "Source account is required"]
+    required: [
+      function() {return this.txnType == "Transfer"}, 
+      "Source account is required"
+    ]
   },
 
   /* hidden ones */

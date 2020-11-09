@@ -16,7 +16,9 @@ const TextInput = ({
       value={value}
       name={name}
     />
-    {error}
+    <div className="inputError">
+      {error}
+    </div>
   </label>
 }
 export default TextInput;

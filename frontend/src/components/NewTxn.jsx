@@ -25,9 +25,6 @@ class NewTxn extends Component {
     });
     axios.post('/txnApi/txn', txn) 
       .then(res => {
-        console.log("Saved!");
-        console.log(res.data);
-        /*console.log(Object.values(res.data.errors).map(txn => console.log(txn)));*/
         if (res.data && res.data.errors) {
           this.setState({
             errors: res.data.errors
@@ -57,9 +54,11 @@ class NewTxn extends Component {
       description,
       category,
       account,
+      sourceAccount,
+      expenseCategory,
     } = this.state;
     return (
-      <div> 
+      <div id="newTxnForm"> 
         <SelectInput
           onChange={this.inputOnChange}
           selected={txnType}
@@ -96,18 +95,32 @@ class NewTxn extends Component {
           label="Description"
           error={errors["description"]}
           />
-        <TextInput
+        {txnType != TRANSFER && <TextInput
           onChange={this.inputOnChange}
           value={category}
           name="category"
           label="Category"
           error={errors["category"]}
-          />
+          />}
+        {txnType == INCOME && <TextInput
+          onChange={this.inputOnChange}
+          value={expenseCategory}
+          name="expenseCategory"
+          label="Expense Category"
+          error={errors["expenseCategory"]}
+          />}
+        {txnType == TRANSFER && <TextInput
+          onChange={this.inputOnChange}
+          value={sourceAccount}
+          name="sourceAccount"
+          label="Source Account"
+          error={errors["sourceAccount"]}
+        />}
         <TextInput
           onChange={this.inputOnChange}
           value={account}
           name="account"
-          label="Account"
+          label={(txnType == TRANSFER ? "Destination " : "") + "Account"}
           error={errors["account"]}
           />
         <button onClick={this.addTxn}>Add Txn</button>

@@ -20,7 +20,9 @@ const SelectInput = ({
       name={name}>
       {optionComponents}
     </select>
-    {error}
+    <div className="inputError">
+      {error}
+    </div>
   </label>;
 }
 export default SelectInput;
