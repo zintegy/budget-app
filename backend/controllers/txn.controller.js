@@ -39,7 +39,7 @@ TxnController.update = (req, res, next) => {
   }
   Txn.findByIdAndUpdate(req.params.id, req.body)
     .then(data => res.json(data))
-    .then(data => res.json(data))
+    .catch(data => res.json(data))
 };
 
 module.exports = TxnController;
