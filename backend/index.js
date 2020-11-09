@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const routes = require('./routes/txnApi');
+const routes = require('./routes/txn.routes');
 const path = require('path');
 require('dotenv').config();
 
