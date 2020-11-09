@@ -98,7 +98,7 @@ class NewTxn extends Component {
           onChange={this.inputOnChange}
           value={category}
           name="category"
-          label="Category"
+          label={(txnType == INCOME ? "Income " : "") + "Category"}
           error={errors["category"]}
           />}
         {txnType == INCOME && <TextInput
