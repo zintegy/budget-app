@@ -9,8 +9,9 @@ const TextInput = ({
 }) => {
   console.log("Error: " + error);
 
-  return <label>{label}
-    <input 
+  return <div className="inputDiv">
+    <label>{label}</label>
+      <input 
       type="text"
       onChange={onChange}
       value={value}
@@ -19,6 +20,6 @@ const TextInput = ({
     <div className="inputError">
       {error}
     </div>
-  </label>
+  </div>
 }
 export default TextInput;

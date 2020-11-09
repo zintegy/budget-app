@@ -1,17 +1,32 @@
 #newTxnForm {
   display: inline-block;
   background-color: #cccccc;
-  width:1000px;
+  width:1500px;
 }
 
-#newTxnForm input {
+#newTxnForm .inputDiv {
+  float: left;
+  width:100em;
   display: inline-block;
+  margin-bottom: 0.2em;
 }
 
-.inputError {
+#newTxnForm input,select {
+  float: left;
+  width:30em;
+}
+
+#newTxnForm label {
+  float: left;
+  text-align: right;
+  width: 20em;
+}
+
+#newTxnForm .inputError {
   color: #dd0000;
+  float: left;
+  text-align: right;
 }
-
 
 
 

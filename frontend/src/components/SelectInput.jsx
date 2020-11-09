@@ -13,7 +13,8 @@ const SelectInput = ({
     return <option value={option}>{option}</option>;
   });
 
-  return <label>{label}
+  return <div className="inputDiv">
+    <label>{label}</label>
     <select 
       value={selected} 
       onChange={onChange} 
@@ -23,6 +24,6 @@ const SelectInput = ({
     <div className="inputError">
       {error}
     </div>
-  </label>;
+  </div>;
 }
 export default SelectInput;

@@ -37,7 +37,7 @@ const txnSchema = new Schema({
     required: [
       function() {
         return this.txnType == "Expense" || (
-          this.txnType == "Income" && this.expenseCategory == "");
+          this.txnType == "Income" && !this.expenseCategory);
       }, 
       "Category is required"
     ]
@@ -46,10 +46,10 @@ const txnSchema = new Schema({
   expenseCategory : {
     type: String, 
     required: [
-      function() {return this.txnType == "Income" && this.category == "";}, 
-      "Expense category is required"],
+      function() {return this.txnType == "Income" && !this.category;}, 
+      "Expense category or category is required"],
     validate: [function(val) {
-      return val == undefined || this.category == undefined;
+      return !val || !this.category;
     }, "Can't enter both expense category and income category"]
   },
 
