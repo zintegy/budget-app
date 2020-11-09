@@ -1,9 +1,14 @@
 @import "NewTxn";
+@import "TxnView";
 
 .App {
   background-color: #121112;
   text-align: center;
   color: #dddddd;
+}
+
+html {
+  min-height: 100%;
 }
 
 .App-logo {

@@ -4,10 +4,13 @@ import axios from 'axios';
 import Input from './Input';
 import TxnView from './TxnView';
 import NewTxn from './NewTxn';
+import SelectInput from './SelectInput';
+import SelectTxnView from './SelectTxnView';
 
 class AllTxns extends Component {
   state = {
-    txns: []
+    txns: [],
+    viewTxnType: "Expense",
   }
 
   componentDidMount() {
@@ -31,17 +34,28 @@ class AllTxns extends Component {
       .catch(err => console.log(err))
   }
 
-  render() {
-    let { txns } = this.state;
-    console.log(txns);
+  viewTxnOnChange = (option) => {
+    this.setState({
+      viewTxnType: option
+    });
+  }
 
-    return <div>
+  render() {
+    let { txns, viewTxnType } = this.state;
+    console.log(this.state);
+
+    return <div id="txnViewDiv">
       <NewTxn
         getTxns={this.getTxns}
+      />
+      <SelectTxnView
+        options={["Expense", "Income", "Transfer"]}
+        onChange={this.viewTxnOnChange}
       />
       <TxnView
         txns={txns}
         deleteTxn={this.deleteTxn}
+        viewTxnType={viewTxnType}
       />
     </div>
   }

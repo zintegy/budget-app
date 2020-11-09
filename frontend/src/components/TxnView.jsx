@@ -2,15 +2,22 @@
 import React from 'react';
 import Txn from './Txn';
 
-const TxnView = ({ txns, deleteTxn }) => {
+const TxnView = ({ txns, deleteTxn, viewTxnType }) => {
   console.log(txns && txns.length > 0)
-  return <table> <tbody> {
+  console.log("Txn type:" + viewTxnType);
+  return <table className="txnTable"> <tbody> {
     (txns && txns.length > 0 
       ? (txns.map(txn => {
-           return <Txn
-               txn={txn}
-               deleteTxn={deleteTxn}
-             />
+           if (txn.txnType == viewTxnType) {
+             return <Txn
+                 txn={txn}
+                 deleteTxn={deleteTxn}
+               />
+           }
+           else {
+             return;
+           }
+
         }))
       : <tr><td>No txns</td></tr>
     )
