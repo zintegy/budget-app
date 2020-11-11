@@ -6,6 +6,7 @@ import TxnView from './TxnView';
 import NewTxn from './NewTxn';
 import SelectInput from './SelectInput';
 import SelectTxnView from './SelectTxnView';
+import Analysis from './Analysis';
 
 class AllTxns extends Component {
   state = {
@@ -45,6 +46,7 @@ class AllTxns extends Component {
     console.log(this.state);
 
     return <div id="txnViewDiv">
+      <Analysis/>
       <NewTxn
         getTxns={this.getTxns}
       />
