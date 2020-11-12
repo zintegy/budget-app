@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import axios from 'axios';
 import TextInput from './TextInput';
 import SelectInput from './SelectInput';
+import {Button} from '@material-ui/core';
 
 const EXPENSE = 'Expense';
 const INCOME = 'Income';
@@ -122,9 +123,9 @@ class NewTxn extends Component {
           label={(txnType == TRANSFER ? "Destination " : "") + "Account"}
           error={errors["account"]}
           />
-        <button 
+        <Button
           className="newTxnSubmit" 
-          onClick={this.addTxn}>Add Txn</button>
+          onClick={this.addTxn}>Add Txn</Button>
       </div>
     );
   }

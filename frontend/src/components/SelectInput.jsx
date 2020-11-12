@@ -1,4 +1,5 @@
 import React from 'react';
+import {Select} from '@material-ui/core';
 
 const SelectInput = ({
   onChange, 
@@ -15,12 +16,12 @@ const SelectInput = ({
 
   return <div className="inputDiv">
     <label>{label}</label>
-    <select 
+    <Select
       value={selected} 
       onChange={onChange} 
       name={name}>
       {optionComponents}
-    </select>
+    </Select>
     <div className="inputError">
       {error}
     </div>

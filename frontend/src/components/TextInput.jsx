@@ -1,4 +1,5 @@
 import React from 'react';
+import { Input } from '@material-ui/core';
 
 const TextInput = ({
   onChange, 
@@ -11,11 +12,12 @@ const TextInput = ({
 
   return <div className="inputDiv">
     <label>{label}</label>
-      <input 
+      <Input
       type="text"
       onChange={onChange}
       value={value}
       name={name}
+      fullWidth={true}
     />
     <div className="inputError">
       {error}
