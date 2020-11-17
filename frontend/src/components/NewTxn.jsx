@@ -2,27 +2,46 @@ import React, {Component} from 'react';
 import axios from 'axios';
 import TextInput from './TextInput';
 import SelectInput from './SelectInput';
-import {Button} from '@material-ui/core';
-
-const EXPENSE = 'Expense';
-const INCOME = 'Income';
-const TRANSFER = 'Transfer';
+import {Button, Container, Select, MenuItem} from '@material-ui/core';
+import TxnType from '../utils/TxnType';
+import TxnTypeSelector from './common/TxnTypeSelector';
+import DateInput from './common/DateInput';
 
 class NewTxn extends Component {
 
   state = {
-    txnType: EXPENSE,
+    txnType: TxnType.EXPENSE,
     amount : "",
     errors: {},
     merchant: "", 
     txnDate: ""
   }
 
+  componentDidMount = () => {
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
+    this.setState({
+      "txnDate": today
+    })
+  }
+
   addTxn = () => {
-    const txn = this.state;
+    let txn = Object.assign({}, this.state)
     this.setState({
       errors: {}
     });
+
+
+    const UTCDate = Date.UTC(
+      txn.txnDate.getFullYear(),
+      txn.txnDate.getMonth(), 
+      txn.txnDate.getDate());
+
+    txn.amount = 1241243124;
+
+    txn.txnDate = UTCDate;
+    console.log(this.state);
+
     axios.post('/txnApi/txn', txn) 
       .then(res => {
         if (res.data && res.data.errors) {
@@ -37,11 +56,20 @@ class NewTxn extends Component {
   }
 
   inputOnChange = (e) => {
+    console.log("Changed: ");
+    console.log(e)
     let target = e.target;
     console.log(target);
     this.setState({
       [target.name] : target.value
      }, () => console.log(this.state));
+  }
+
+  dateOnChange = (e) => {
+    console.log("Date changed")
+    this.setState({
+      "txnDate" : e 
+    }, () => console.log(this.state));
   }
 
   render() {
@@ -57,16 +85,18 @@ class NewTxn extends Component {
       sourceAccount,
       expenseCategory,
     } = this.state;
-    return (
+    return (<Container maxWidth="sm">
       <div id="newTxnForm"> 
-        <SelectInput
-          onChange={this.inputOnChange}
-          selected={txnType}
-          options={[EXPENSE, INCOME, TRANSFER]}
+        <TxnTypeSelector
           name="txnType"
-          label="Txn Type"
-          error={errors["txnType"]}
-          /> 
+          id="txnType"
+          value={txnType}
+          onChange={this.inputOnChange}
+        />
+        <DateInput
+          selectedDate={txnDate}
+          onChange={this.dateOnChange}
+        />
         <TextInput
           onChange={this.inputOnChange}
           value={txnDate}
@@ -81,7 +111,7 @@ class NewTxn extends Component {
           label="Amount"
           error={errors["amount"]}
           />
-        {txnType == EXPENSE && <TextInput
+        {txnType == TxnType.EXPENSE && <TextInput
           onChange={this.inputOnChange}
           value={merchant}
           name="merchant"
@@ -95,21 +125,21 @@ class NewTxn extends Component {
           label="Description"
           error={errors["description"]}
           />
-        {txnType != TRANSFER && <TextInput
+        {txnType != TxnType.TRANSFER && <TextInput
           onChange={this.inputOnChange}
           value={category}
           name="category"
-          label={(txnType == INCOME ? "Income " : "") + "Category"}
+          label={(txnType == TxnType.INCOME ? "Income " : "") + "Category"}
           error={errors["category"]}
           />}
-        {txnType == INCOME && <TextInput
+        {txnType == TxnType.INCOME && <TextInput
           onChange={this.inputOnChange}
           value={expenseCategory}
           name="expenseCategory"
           label="Expense Category"
           error={errors["expenseCategory"]}
           />}
-        {txnType == TRANSFER && <TextInput
+        {txnType == TxnType.TRANSFER && <TextInput
           onChange={this.inputOnChange}
           value={sourceAccount}
           name="sourceAccount"
@@ -120,13 +150,13 @@ class NewTxn extends Component {
           onChange={this.inputOnChange}
           value={account}
           name="account"
-          label={(txnType == TRANSFER ? "Destination " : "") + "Account"}
+          label={(txnType == TxnType.TRANSFER ? "Destination " : "") + "Account"}
           error={errors["account"]}
           />
         <Button
           className="newTxnSubmit" 
           onClick={this.addTxn}>Add Txn</Button>
-      </div>
+      </div></Container>
     );
   }
 }

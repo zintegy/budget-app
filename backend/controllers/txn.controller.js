@@ -29,7 +29,6 @@ TxnController.create = (req, res, next) => {
     req.body.category = null;
   }
 
-
   if (req.body.merchant) {
     req.body.capitalMerchant = req.body.merchant;
   }
