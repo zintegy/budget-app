@@ -7,6 +7,9 @@ import NewTxn from './NewTxn';
 import SelectInput from './SelectInput';
 import SelectTxnView from './SelectTxnView';
 import Analysis from './Analysis';
+import NewAccount from './NewAccount';
+
+import {Container} from '@material-ui/core';
 
 class AllTxns extends Component {
   state = {
@@ -47,9 +50,14 @@ class AllTxns extends Component {
 
     return <div id="txnViewDiv">
       <Analysis/>
-      <NewTxn
-        getTxns={this.getTxns}
-      />
+      <Container className="newEntityForms" maxWidth="lg">
+        <NewTxn
+          getTxns={this.getTxns}
+        />
+        <NewAccount
+          getTxns={this.getTxns}
+        />
+      </Container>
       <SelectTxnView
         options={["Expense", "Income", "Transfer"]}
         onChange={this.viewTxnOnChange}
