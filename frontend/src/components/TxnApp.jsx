@@ -15,10 +15,31 @@ class AllTxns extends Component {
   state = {
     txns: [],
     viewTxnType: "Expense",
+    accounts: [],
+    accountToName: {}
   }
 
   componentDidMount() {
     this.getTxns();
+    this.getAccounts();
+
+
+  }
+
+  getAccounts = () => {
+  console.log("Getting accounts");
+    axios.get('/accountApi/account')
+      .then(res => {
+        if (res.data) {
+          let accountToName = {}
+          res.data.map(account => {
+            accountToName[account._id] = account.accountName});
+          this.setState({accounts: res.data, accountToName})
+        }
+      })
+      .catch(err => console.log(err))
+
+    
   }
 
   getTxns = () => {
@@ -34,7 +55,10 @@ class AllTxns extends Component {
   deleteTxn = (id) => {
     console.log("Deleting " + id);
     axios.delete(`/txnApi/txn/${id}`)
-      .then(res => this.getTxns())
+      .then(res => {
+        this.getTxns();
+        this.getAccounts();
+      })
       .catch(err => console.log(err))
   }
 
@@ -44,8 +68,14 @@ class AllTxns extends Component {
     });
   }
 
+  accountToName = (accountId) => {
+    if (accountId == null) return "";
+    return this.state.accountToName[accountId];
+
+  }
+
   render() {
-    let { txns, viewTxnType } = this.state;
+    let { txns, viewTxnType, accounts } = this.state;
     console.log(this.state);
 
     return <div id="txnViewDiv">
@@ -53,6 +83,8 @@ class AllTxns extends Component {
       <Container className="newEntityForms" maxWidth="lg">
         <NewTxn
           getTxns={this.getTxns}
+          getAccounts={this.getAccounts}
+          accounts={accounts}
         />
         <NewAccount
           getTxns={this.getTxns}
@@ -66,6 +98,7 @@ class AllTxns extends Component {
         txns={txns}
         deleteTxn={this.deleteTxn}
         viewTxnType={viewTxnType}
+        accountToName={this.accountToName}
       />
     </div>
   }

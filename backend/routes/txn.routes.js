@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Txn = require('../models/txn');
 const TxnController = require('../controllers/txn.controller');
+const TxnCreation = require('../helpers/TxnCreation');
 
 // search transactions 
 router.route('/txn')
   .get(TxnController.search)
-  .post(TxnController.create);
+  .post(TxnCreation.createTxn);
 
 router.route('/txn/:id')
   .delete(TxnController.delete)

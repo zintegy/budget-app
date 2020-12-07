@@ -8,8 +8,6 @@ const TextInput = ({
   name,
   label
 }) => {
-  console.log("Error: " + error);
-
   return <div className="inputDiv">
     <label>{label}</label>
       <Input

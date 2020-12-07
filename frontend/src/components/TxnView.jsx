@@ -2,7 +2,7 @@
 import React from 'react';
 import Txn from './Txn';
 
-const TxnView = ({ txns, deleteTxn, viewTxnType }) => {
+const TxnView = ({ txns, deleteTxn, viewTxnType, accountToName }) => {
   console.log(txns && txns.length > 0)
   console.log("Txn type:" + viewTxnType);
   return <table className="txnTable"> <tbody> {
@@ -12,6 +12,7 @@ const TxnView = ({ txns, deleteTxn, viewTxnType }) => {
              return <Txn
                  txn={txn}
                  deleteTxn={deleteTxn}
+                 accountToName={accountToName}
                />
            }
            else {

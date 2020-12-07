@@ -5,6 +5,7 @@ import SelectInput from './SelectInput';
 import {Button, Container, Select, MenuItem} from '@material-ui/core';
 import TxnType from '../utils/TxnType';
 import TxnTypeSelector from './common/TxnTypeSelector';
+import AccountSelector from './common/AccountSelector';
 import DateInput from './common/DateInput';
 
 class NewTxn extends Component {
@@ -14,7 +15,8 @@ class NewTxn extends Component {
     amount : "",
     errors: {},
     merchant: "", 
-    txnDate: ""
+    txnDate: "",
+    account: "",
   }
 
   componentDidMount = () => {
@@ -37,8 +39,6 @@ class NewTxn extends Component {
       txn.txnDate.getMonth(), 
       txn.txnDate.getDate());
 
-    txn.amount = 1241243124;
-
     txn.txnDate = UTCDate;
     console.log(this.state);
 
@@ -50,6 +50,7 @@ class NewTxn extends Component {
           }, () => console.log(this.state))
         }
         this.props.getTxns();
+        this.props.getAccounts();
       })
       .catch(err => console.log(err));
     
@@ -62,7 +63,7 @@ class NewTxn extends Component {
     console.log(target);
     this.setState({
       [target.name] : target.value
-     }, () => console.log(this.state));
+     }, () => {console.log("New state:"); console.log(this.state)});
   }
 
   dateOnChange = (e) => {
@@ -85,6 +86,8 @@ class NewTxn extends Component {
       sourceAccount,
       expenseCategory,
     } = this.state;
+    console.log("Accounts: ");
+    console.log(this.props.accounts);
     return (<Container maxWidth="sm">
       <div id="newTxnForm"> 
         <TxnTypeSelector
@@ -139,20 +142,24 @@ class NewTxn extends Component {
           label="Expense Category"
           error={errors["expenseCategory"]}
           />}
-        {txnType == TxnType.TRANSFER && <TextInput
+        {txnType != TxnType.INCOME && <AccountSelector
           onChange={this.inputOnChange}
-          value={sourceAccount}
+          selected={sourceAccount}
           name="sourceAccount"
+          id="selectSourceAccout"
           label="Source Account"
           error={errors["sourceAccount"]}
+          accounts={this.props.accounts}
         />}
-        <TextInput
+        {txnType != TxnType.EXPENSE && <AccountSelector
           onChange={this.inputOnChange}
-          value={account}
+          selected={account}
           name="account"
-          label={(txnType == TxnType.TRANSFER ? "Destination " : "") + "Account"}
+          id="selectDestAccount"
+          label={"destination Account"}
           error={errors["account"]}
-          />
+          accounts={this.props.accounts}
+        />}
         <Button
           className="newTxnSubmit" 
           onClick={this.addTxn}>Add Txn</Button>

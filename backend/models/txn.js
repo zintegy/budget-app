@@ -25,7 +25,10 @@ const txnSchema = new Schema({
   },
   account : {
     type : String,
-    required: [true, "Account is required"]
+    required: [
+      function() {return this.txnType != "Expense"}, 
+      "Destination account is required"
+    ]
   },
 
   description : {
@@ -56,7 +59,7 @@ const txnSchema = new Schema({
   sourceAccount : {
     type: String, 
     required: [
-      function() {return this.txnType == "Transfer"}, 
+      function() {return this.txnType != "Income"}, 
       "Source account is required"
     ]
   },

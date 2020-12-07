@@ -6,7 +6,7 @@ const accountSchema = new Schema({
   accountType : {
     type : String,
     enum : ["CC", "Checking", "Savings", "Merchant Credit"],
-    required: [true, "Account type is required"]
+    required: [true, "Account type is invalid"]
   },
   accountName: {
     type : String,
@@ -26,7 +26,8 @@ const accountSchema = new Schema({
     type: Number
   },
   isLiquid: {
-    type: Boolean
+    type: Boolean,
+    default: true,
   },
 });
       

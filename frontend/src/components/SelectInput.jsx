@@ -9,6 +9,7 @@ const SelectInput = ({
   name,
   label
 }) => {
+  console.log("Options: " + options);
 
   const optionComponents = options.map(option => {
     return <option value={option}>{option}</option>;

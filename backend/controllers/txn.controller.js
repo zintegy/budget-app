@@ -1,5 +1,5 @@
 const Txn = require('../models/txn');
-
+const Account = require('../models/account');
 const DbErrorHandler = require('../helpers/DbErrorHandler');
 
 const TxnController = {};
@@ -14,31 +14,40 @@ TxnController.search = (req, res, next) => {
 };
 
 TxnController.create = (req, res, next) => {
-  if (req.body.txnType != "Expense") {
+  const txnType = req.body.txnType;
+  if (txnType != "Expense") {
     req.body.merchant = null;
   }
 
-  if (req.body.txnType != "Income") {
+  if (txnType == "Expense") {
+    req.body.account = null;
+  }
+  if (txnType != "Income") {
     req.body.expenseCategory = null;
   }
 
-  if (req.body.txnType != "Transfer") {
+  if (txnType == "Income") {
     req.body.sourceAccount = null;
   }
-  else {
+
+  if (txnType == "Transfer") {
     req.body.category = null;
   }
 
   if (req.body.merchant) {
     req.body.capitalMerchant = req.body.merchant;
   }
-    Txn.create(req.body)
-    .then(data => res.json(data))
+  console.log("Request body:");
+  console.log(req.body);
+
+  return Txn.create(req.body)
+    .then(data => {res.json(data); return true;
+    })
     .catch(data => {
       res.json(
-        {"errors": 
-          DbErrorHandler.translateError(data["errors"])}
+        {"errors": DbErrorHandler.translateError(data["errors"])}
       );
+      return false;
     })
 };
 

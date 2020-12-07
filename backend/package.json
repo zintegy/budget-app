@@ -9,7 +9,7 @@
     "start": "node index.js",
     "dboff": "killall mongod",
     "watch": "nodemon index.js",
-    "dbon": "mkdir -p ./db && mongod --dbpath ./db",
+    "dbon": "mkdir -p ./db && mongod --dbpath ./db --replSet rs0",
     "dev": "concurrently \"yarn run watch\" \"cd ../frontend && yarn start\""
   },
   "keywords": [
@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "http-errors": "^1.8.0",
     "mongoose": "^5.10.11",
+    "run-rs": "^0.7.3",
     "superagent": "^6.1.0",
     "yarn": "^1.22.10"
   },
