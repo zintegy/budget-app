@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import axios from 'axios';
-import TextInput from './TextInput';
-import SelectInput from './SelectInput';
+import TextInput from './common/TextInput';
 import {Button, Container, Select, MenuItem} from '@material-ui/core';
 import TxnType from '../utils/TxnType';
 import TxnTypeSelector from './common/TxnTypeSelector';

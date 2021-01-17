@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
 import './styles/App.scss';
 
-import TxnApp from './components/TxnApp';
+import AppHome from './components/AppHome';
 
 const App = () => {
   return <div className="App">
-    <TxnApp/>
+    <AppHome/>
   </div>
 };
 
