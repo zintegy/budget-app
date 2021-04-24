@@ -10,6 +10,7 @@
     "dboff": "killall mongod",
     "watch": "nodemon index.js",
     "dbon": "mkdir -p ./db && mongod --dbpath ./db --replSet rs0",
+    "dbprod": "mkdir -p ./dbprod && mongod --dbpath ./dbprod --replSet rs2",
     "dev": "concurrently \"yarn run watch\" \"cd ../frontend && yarn start\""
   },
   "keywords": [

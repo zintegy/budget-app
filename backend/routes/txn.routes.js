@@ -2,15 +2,15 @@ const express = require('express');
 const router = express.Router();
 const Txn = require('../models/txn');
 const TxnController = require('../controllers/txn.controller');
-const TxnCreation = require('../helpers/TxnCreation');
+const TxnHelper = require('../helpers/txn.helpers');
 
 // search transactions 
 router.route('/txn')
   .get(TxnController.search)
-  .post(TxnCreation.createTxn);
+  .post(TxnHelper.createTxn);
 
 router.route('/txn/:id')
-  .delete(TxnController.delete)
+  .delete(TxnHelper.deleteTxnAndUpdateAccount)
   .put(TxnController.update);
 
 router.delete('/txn/:id', (req, res, next) => {

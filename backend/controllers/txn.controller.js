@@ -23,7 +23,7 @@ TxnController.create = (req, res, next) => {
     req.body.account = null;
   }
   if (txnType != "Income") {
-    req.body.expenseCategory = null;
+    req.body.incomeCategory = null;
   }
 
   if (txnType == "Income") {
@@ -31,7 +31,7 @@ TxnController.create = (req, res, next) => {
   }
 
   if (txnType == "Transfer") {
-    req.body.category = null;
+    req.body.expenseCategory = null;
   }
 
   if (req.body.merchant) {
@@ -52,9 +52,9 @@ TxnController.create = (req, res, next) => {
 };
 
 TxnController.delete = (req, res, next) => {
-  Txn.findOneAndDelete({"_id": req.params.id})
-    .then(data => res.json(data))
-    .catch(data => res.json({"error": "Not deleted."}))
+  return Txn.findOneAndDelete({"_id": req.params.id})
+    .then(data => {res.json(data); return data})
+    .catch(data => {res.json({"error": "Not deleted."}); return {"error": "Not deleted"}})
 };
 
 TxnController.update = (req, res, next) => {

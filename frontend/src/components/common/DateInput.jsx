@@ -3,7 +3,7 @@ import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/picker
 import DateFnsUtils from '@date-io/date-fns';
 
 const DateInput = ({id, label, selectedDate, onChange}) => {
-  if (selectedDate == null || selectedDate == "") {
+  if (selectedDate === null || selectedDate === "") {
     selectedDate = new Date();
   }
 

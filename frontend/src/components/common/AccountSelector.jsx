@@ -1,29 +1,40 @@
 import React from 'react';
-import {InputLabel, Select} from '@material-ui/core';
+import {TextField} from '@material-ui/core';
+import {Autocomplete} from '@material-ui/lab';
 
 /** 
- * Shows a dropdown of accounts and allows you to select one*
+ * Shows a dropdown of accounts and allows you to select one
  */
 
-const AccountSelector = ({name, id, selected, label, error, accounts, onChange}) => {
-  const options = accounts.map(account => (<option value={account._id}>{account.accountName} (${account.currentAmount})</option>))
-
+const AccountSelector = ({
+  name, 
+  id, 
+  value, 
+  inputValue,
+  label, 
+  error, 
+  accounts, 
+  onChange,
+  onInputChange
+}) => {
   return (<div className="inputDiv">
     <label>{label}</label>
-    <Select 
-      native
-      className="accountSelectorDropdown"
-      value={selected}
-      onChange={onChange}
-      autowidth={true}
-      inputProps={{
-        name: name,
-        id: {id}
+    <Autocomplete
+      autoHighlight
+      debug
+      value={value}
+      inputValue={inputValue}
+      className="selectorDropdown"
+      onInputChange={onInputChange}
+      name={name}
+      onChange={(e, account) => {
+        onChange(account, name)
       }}
-    >
-      <option aria-label="None" value="" />
-      {options}
-    </Select>
+      getOptionSelected={(opt, val) => {return val===opt._id}}
+      options={accounts}
+      getOptionLabel={(account) => account.accountName + " ($" + account.currentAmount + ")"}
+      renderInput={(params) => <TextField {...params} name={name + "Input"}/>}
+    />
     <div className="inputError">
       {error}
     </div>
@@ -31,8 +42,30 @@ const AccountSelector = ({name, id, selected, label, error, accounts, onChange})
   );
 }
 
+const selectorOnChange = (that) => (newAccount, name) => {
+  if (newAccount === null) {
+    that.setState({
+      [name]: null
+    })
+  }
+  else {
+    that.setState({
+      [name]: newAccount._id,
+      [name + "Input"]: newAccount.accountName + " ($" + newAccount.currentAmount + ")"
+    })
+  }
+}
 
+const updateSelectorInput = (that, accountId, name, allAccounts) => {
+  if (accountId === null) return;
+  let accountObj = allAccounts.filter(account => account._id === accountId)[0];
+  const accountInput = accountObj.accountName + " ($" + accountObj.currentAmount + ")";
+
+  that.setState({[name + "Input"]: accountInput});
+}
+  
 
 export default AccountSelector;
+export { selectorOnChange, updateSelectorInput };
 
 

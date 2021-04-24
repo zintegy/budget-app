@@ -4,10 +4,11 @@ import axios from 'axios';
 import TxnView from './txns/TxnView';
 import NewTxn from './txns/NewTxn';
 import AnalysisHome from './analysis/AnalysisHome';
-import NewAccount from './NewAccount';
+import NewAccount from './accounts/NewAccount';
+import NewCategory from './categories/NewCategory';
 import TxnTypeSelector from './common/TxnTypeSelector';
 
-import {Container} from '@material-ui/core';
+import {Container, AccordionSummary, Accordion, AccordionDetails} from '@material-ui/core';
 
 /*
  * The home page of the app. Should render all other components.
@@ -17,7 +18,10 @@ class AppHome extends Component {
     txns: [],
     viewTxnType: "Expense",
     accounts: [],
-    accountToName: {}
+    accountToName: {},
+    incomeCategories: [],
+    expenseCategories: []
+
   }
 
   /*
@@ -26,6 +30,7 @@ class AppHome extends Component {
   componentDidMount() {
     this.getTxns(this.state.viewTxnType);
     this.getAccounts();
+    this.getCategories();
   }
 
   /*
@@ -34,11 +39,11 @@ class AppHome extends Component {
    * which account ID has which name.
    */
   getAccounts = () => {
-    axios.get('/accountApi/account')
+    return axios.get('/accountApi/account')
       .then(res => {
         if (res.data) {
           let accountToName = {}
-          res.data.map(account => {
+          res.data.forEach(account => {
             accountToName[account._id] = account.accountName});
           this.setState({accounts: res.data, accountToName})
         }
@@ -64,6 +69,28 @@ class AppHome extends Component {
         }
       })
       .catch(err => console.log(err)) 
+  }
+
+  getCategories = () => {
+    axios.get('/categoryApi/category')
+      .then(res => {
+        if (res.data) {
+          const expenseCategories = 
+            res.data
+              .filter(obj => obj.categoryType === "Expense")
+              .map(obj => obj.categoryName);
+          const incomeCategories = 
+            res.data
+              .filter(obj => obj.categoryType === "Income")
+              .map(obj => obj.categoryName);
+
+          this.setState({
+            expenseCategories,
+            incomeCategories
+          }) 
+        }
+      })
+      .catch(err => console.log(err))
   }
 
   /*
@@ -94,25 +121,57 @@ class AppHome extends Component {
    * Helper method to retrieving the name of an account from the ID.
    */
   accountToName = (accountId) => {
-    if (accountId == null) return "";
+    if (accountId === null) return "";
     return this.state.accountToName[accountId];
   }
 
   render() {
-    let { txns, viewTxnType, accounts } = this.state;
-    console.log("App home state: " + this.state);
+    let { 
+      txns, 
+      viewTxnType, 
+      accounts, 
+      expenseCategories, 
+      incomeCategories 
+    } = this.state;
 
     return <div id="txnViewDiv">
       <AnalysisHome/>
       <Container className="newEntityForms" maxWidth="lg">
-        <NewTxn
-          getTxns={this.getTxns}
-          getAccounts={this.getAccounts}
-          accounts={accounts}
-        />
-        <NewAccount
-          getTxns={this.getTxns}
-        />
+        <Accordion>
+          <AccordionSummary>
+            New Txn 
+          </AccordionSummary>
+          <AccordionDetails> 
+            <NewTxn
+              getTxns={this.getTxns}
+              getAccounts={this.getAccounts}
+              incomeCategories={incomeCategories}
+              expenseCategories={expenseCategories}
+              accounts={accounts}
+            />
+          </AccordionDetails> 
+        </Accordion>
+        <Accordion>
+          <AccordionSummary>
+            New Account 
+          </AccordionSummary>
+          <AccordionDetails> 
+            <NewAccount
+              getAccounts={this.getAccounts}
+            />
+          </AccordionDetails> 
+        </Accordion>
+        <Accordion>
+          <AccordionSummary>
+            New Category
+          </AccordionSummary>
+          <AccordionDetails> 
+            <NewCategory
+              getCategories={this.getCategories}
+            />
+          </AccordionDetails> 
+        </Accordion>
+
       </Container>
       <TxnTypeSelector
         name="selectTxnViewButtons"

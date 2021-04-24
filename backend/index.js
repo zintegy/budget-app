@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const txnRoutes = require('./routes/txn.routes');
 const accountRoutes = require('./routes/account.routes');
+const categoryRoutes = require('./routes/category.routes');
 
 const path = require('path');
 require('dotenv').config();
@@ -30,6 +31,7 @@ app.use(bodyParser.json());
 
 app.use('/txnApi', txnRoutes);
 app.use('/accountApi', accountRoutes);
+app.use('/categoryApi', categoryRoutes);
 
 app.use((err, req, res, next) => {
   console.log(err);

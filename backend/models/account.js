@@ -22,8 +22,10 @@ const accountSchema = new Schema({
   lastTxnDate: {
     type: Date
   },
-  monthlySpend: {
-    type: Number
+  monthlyDelta: {
+    type: Map,
+    of: {type: Map, of: Number},
+    default: new Map()
   },
   isLiquid: {
     type: Boolean,

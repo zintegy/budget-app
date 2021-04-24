@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import TextInput from '../common/TextInput';
-import {Button, Container, Select, MenuItem} from '@material-ui/core';
-import TxnType from '../..//utils/TxnType';
+import {Button, Container} from '@material-ui/core';
+import TxnType from '../../utils/TxnType';
 import TxnTypeSelector from '../common/TxnTypeSelector';
-import AccountSelector from '../common/AccountSelector';
+import CategorySelector, {categoryOnChange} from '../common/CategorySelector';
+import AccountSelector, { selectorOnChange, updateSelectorInput } from '../common/AccountSelector';
 import DateInput from '../common/DateInput';
 
 class NewTxn extends Component {
@@ -15,7 +16,13 @@ class NewTxn extends Component {
     errors: {},
     merchant: "", 
     txnDate: "",
-    account: "",
+    sourceAccount: null,
+    sourceAccountInput: "",
+    destinationAccount: null,
+    destinationAccountInput: "",
+    successMessage: "",
+    incomeCategory: null,
+    expenseCategory: null
   }
 
   /* 
@@ -46,34 +53,47 @@ class NewTxn extends Component {
       txn.txnDate.getDate());
 
     txn.txnDate = UTCDate;
-    console.log(this.state);
 
     axios.post('/txnApi/txn', txn) 
       .then(res => {
         if (res.data && res.data.errors) {
+          console.log(res.data.errors);
           this.setState({
             errors: res.data.errors
-          }, () => console.log(this.state))
+          })
+          
+        }
+        if (res.data && !res.data.errors) {
+          this.setState({
+            successMessage: "Success!"
+          })
         }
         this.props.getTxns(txn.txnType);
-        this.props.getAccounts();
+        this.props.getAccounts().then(() => {
+          updateSelectorInput(
+            this, txn.sourceAccount, "sourceAccount", this.props.accounts);
+          updateSelectorInput(
+            this, txn.destinationAccount, "destinationAccount", this.props.accounts);
+        });
+
       })
       .catch(err => console.log(err));
     
   }
 
   inputOnChange = (e) => {
+    if (e == null) return;
     let target = e.target;
     this.setState({
-      [target.name] : target.value
-     }, () => {console.log("New state:"); console.log(this.state)});
+      [target.name] : target.value,
+      successMessage: ""
+    }, () => console.log(this.state));
   }
 
   dateOnChange = (e) => {
-    console.log("Date changed")
     this.setState({
       "txnDate" : e 
-    }, () => console.log(this.state));
+    });
   }
 
   render() {
@@ -84,13 +104,14 @@ class NewTxn extends Component {
       merchant,
       txnDate,
       description,
-      category,
-      account,
+      incomeCategory,
+      destinationAccount,
       sourceAccount,
+      sourceAccountInput,
+      destinationAccountInput,
       expenseCategory,
+      successMessage,
     } = this.state;
-    console.log("Accounts: ");
-    console.log(this.props.accounts);
     return (<Container maxWidth="sm">
       <div id="newTxnForm"> 
         <TxnTypeSelector
@@ -105,19 +126,12 @@ class NewTxn extends Component {
         />
         <TextInput
           onChange={this.inputOnChange}
-          value={txnDate}
-          name="txnDate"
-          label="Date"
-          error={errors["txnDate"]}
-          />
-        <TextInput
-          onChange={this.inputOnChange}
           value={amount}
           name="amount"
           label="Amount"
           error={errors["amount"]}
           />
-        {txnType == TxnType.EXPENSE && <TextInput
+        {txnType === TxnType.EXPENSE && <TextInput
           onChange={this.inputOnChange}
           value={merchant}
           name="merchant"
@@ -131,41 +145,50 @@ class NewTxn extends Component {
           label="Description"
           error={errors["description"]}
           />
-        {txnType != TxnType.TRANSFER && <TextInput
-          onChange={this.inputOnChange}
-          value={category}
-          name="category"
-          label={(txnType == TxnType.INCOME ? "Income " : "") + "Category"}
-          error={errors["category"]}
+        {txnType === TxnType.INCOME && <CategorySelector
+          onChange={categoryOnChange(this)}
+          selected={incomeCategory}
+          name="incomeCategory"
+          label="Income Category"
+          error={errors["incomeCategory"]}
+          categories={this.props.incomeCategories}
           />}
-        {txnType == TxnType.INCOME && <TextInput
-          onChange={this.inputOnChange}
-          value={expenseCategory}
+        {txnType !== TxnType.TRANSFER && <CategorySelector
+          onChange={categoryOnChange(this)}
+          selected={expenseCategory}
           name="expenseCategory"
           label="Expense Category"
           error={errors["expenseCategory"]}
+          categories={this.props.expenseCategories}
           />}
-        {txnType != TxnType.INCOME && <AccountSelector
-          onChange={this.inputOnChange}
-          selected={sourceAccount}
+        {txnType !== TxnType.INCOME && <AccountSelector
+          onChange={selectorOnChange(this)}
+          onInputChange={this.inputOnChange}
+          inputValue={sourceAccountInput}
+          value={sourceAccount}
           name="sourceAccount"
-          id="selectSourceAccout"
+          id="selectSourceAccount"
           label="Source Account"
           error={errors["sourceAccount"]}
           accounts={this.props.accounts}
         />}
-        {txnType != TxnType.EXPENSE && <AccountSelector
-          onChange={this.inputOnChange}
-          selected={account}
-          name="account"
+        {txnType !== TxnType.EXPENSE && <AccountSelector
+          onChange={selectorOnChange(this)}
+          onInputChange={this.inputOnChange}
+          inputValue={destinationAccountInput}
+          value={destinationAccount}
+          name="destinationAccount"
           id="selectDestAccount"
-          label={"destination Account"}
-          error={errors["account"]}
+          label="Destination Account"
+          error={errors["destinationAccount"]}
           accounts={this.props.accounts}
         />}
-        <Button
-          className="newTxnSubmit" 
-          onClick={this.addTxn}>Add Txn</Button>
+        <div>
+          <Button
+            className="newTxnSubmit" 
+            onClick={this.addTxn}>Add Txn</Button>
+          {successMessage}
+        </div>
       </div></Container>
     );
   }
