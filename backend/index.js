@@ -20,10 +20,10 @@ mongoose.set('useFindAndModify', false);
 //  .catch(err => console.log(err));
 const username = process.env.USERNAME
 const password = process.env.PASSWORD
-mongoose.connect('mongodb+srv://' + username + ':' + password + '@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+//mongoose.connect('mongodb+srv://' + username + ':' + password + '@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+mongoose.connect('mongodb+srv://zintegy:LSU4*cyvmongodb@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
   .then(() => console.log("DB connected"))
   .catch(err => console.log(err));
-//mongoose.connect('mongodb+srv://@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
 
 mongoose.Promise = global.Promise;
 
