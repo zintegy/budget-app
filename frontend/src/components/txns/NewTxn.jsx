@@ -14,7 +14,7 @@ class NewTxn extends Component {
     txnType: TxnType.EXPENSE,
     amount : "",
     errors: {},
-    merchant: "", 
+    merchant: "",
     txnDate: "",
     sourceAccount: null,
     sourceAccountInput: "",
@@ -25,8 +25,8 @@ class NewTxn extends Component {
     expenseCategory: null
   }
 
-  /* 
-   * Runs on initial load. 
+  /*
+   * Runs on initial load.
    */
   componentDidMount = () => {
     let today = new Date();
@@ -49,36 +49,34 @@ class NewTxn extends Component {
     // always use UTC midnight
     const UTCDate = Date.UTC(
       txn.txnDate.getFullYear(),
-      txn.txnDate.getMonth(), 
+      txn.txnDate.getMonth(),
       txn.txnDate.getDate());
 
     txn.txnDate = UTCDate;
 
-    axios.post('/txnApi/txn', txn) 
+    axios.post('/txnApi/txn', txn)
       .then(res => {
         if (res.data && res.data.errors) {
           console.log(res.data.errors);
           this.setState({
             errors: res.data.errors
           })
-          
+
         }
         if (res.data && !res.data.errors) {
           this.setState({
             successMessage: "Success!"
           })
         }
-        this.props.getTxns(txn.txnType);
-        this.props.getAccounts().then(() => {
+        this.props.refetchData(txn.txnType).then(() => {
           updateSelectorInput(
             this, txn.sourceAccount, "sourceAccount", this.props.accounts);
           updateSelectorInput(
             this, txn.destinationAccount, "destinationAccount", this.props.accounts);
         });
-
       })
       .catch(err => console.log(err));
-    
+
   }
 
   inputOnChange = (e) => {
@@ -87,20 +85,20 @@ class NewTxn extends Component {
     this.setState({
       [target.name] : target.value,
       successMessage: ""
-    }, () => console.log(this.state));
+    });
   }
 
   dateOnChange = (e) => {
     this.setState({
-      "txnDate" : e 
+      "txnDate" : e
     });
   }
 
   render() {
-    let { 
-      amount, 
-      errors, 
-      txnType, 
+    let {
+      amount,
+      errors,
+      txnType,
       merchant,
       txnDate,
       description,
@@ -113,7 +111,7 @@ class NewTxn extends Component {
       successMessage,
     } = this.state;
     return (<Container maxWidth="sm">
-      <div id="newTxnForm"> 
+      <div id="newTxnForm">
         <TxnTypeSelector
           name="txnType"
           id="txnType"
@@ -185,7 +183,7 @@ class NewTxn extends Component {
         />}
         <div>
           <Button
-            className="newTxnSubmit" 
+            className="newTxnSubmit"
             onClick={this.addTxn}>Add Txn</Button>
           {successMessage}
         </div>

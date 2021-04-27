@@ -25,12 +25,11 @@ class ShowTxn extends Component {
 
   renderBackdrop = () => {
     let {showDeletePopover} = this.state;
-    console.log("render backdrop")
     return <Backdrop open={showDeletePopover} onClick={() => this.toggleShowPopover(false)} id="deletePopoverBackdrop"/>
   }
 
   render() {
-    let {txn, accountToName, deleteTxn} = this.props;
+    let {txn, accountToName, deleteTxn, refetchData, viewTxnType} = this.props;
     let {showDeletePopover} = this.state;
     let isExpense = txn.txnType === "Expense";
     let isIncome = txn.txnType === "Income";
@@ -45,20 +44,21 @@ class ShowTxn extends Component {
       {isIncome ? <td>{txn.incomeCategory}</td> : null}
       {!isTransfer ? <td>{txn.expenseCategory}</td> : null}
       {!isIncome ? <td>{accountToName(txn.sourceAccount)}</td> : null}
-      {!isExpense ? <td>{accountToName(txn.account)}</td> : null}
+      {!isExpense ? <td>{accountToName(txn.destinationAccount)}</td> : null}
       <div onClick={() => this.toggleShowPopover(true)}>X</div>
       <Modal
         show={showDeletePopover}
         onHide={() => this.toggleShowPopover(false)}
         renderBackdrop={this.renderBackdrop}
         id="deleteTxnPopover"
+        onkeypress={() => console.log("Key pressed")}
       >
         <div>Delete this txn?
           <div>
             <Button onClick={() => this.toggleShowPopover(false)}>No</Button>
             <Button onClick={() => {
-              deleteTxn(txn._id);
               this.toggleShowPopover(false);
+              deleteTxn(txn._id).then(() => refetchData(viewTxnType))
             }}
             >Yes</Button>
           </div>
@@ -74,14 +74,17 @@ class ShowTxn extends Component {
 /*
  * Renders all transactions of type=viewTxnType.
  */
-const TxnView = ({ txns, deleteTxn, viewTxnType, accountToName }) => {
+const TxnView = ({ txns, deleteTxn, viewTxnType, accountToName, refetchData }) => {
 
   let txnRows = (txns && txns.length > 0)
     ? txns.filter(txn => txn.txnType === viewTxnType)
     .map(txn => <ShowTxn
       txn={txn}
       deleteTxn={deleteTxn}
-      accountToName={accountToName}/>)
+      accountToName={accountToName}
+      refetchData={refetchData}
+      viewTxnType={viewTxnType}
+      />)
     : [];
 
   if (txnRows.length === 0) {
@@ -93,11 +96,22 @@ const TxnView = ({ txns, deleteTxn, viewTxnType, accountToName }) => {
 
   let header = <tr>{headerArray.map(header => <td key={header}>{header}</td>)}</tr>
 
-  return <table className="txnTable"><tbody>{header}{
-    txnRows.length > 0
-      ? txnRows
-      : <tr key="notxn"><td>No txns</td></tr>
-  }</tbody></table>
+    // leave commented unless you need it
+    let deleteButton = <Button onClick={() => massDelete(txns, deleteTxn)}> Delete All </Button>
+    deleteButton = "";
+
+    return <div>
+      {deleteButton}
+      <table className="txnTable"><tbody>{header}{
+        txnRows.length > 0
+          ? txnRows
+          : <tr key="notxn"><td>No txns</td></tr>
+      }</tbody></table>
+    </div>
+}
+
+function massDelete(txns, deleteTxn) {
+  txns.forEach(txn => console.log(deleteTxn(txn._id)))
 }
 
 export default TxnView

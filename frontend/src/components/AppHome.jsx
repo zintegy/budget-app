@@ -8,6 +8,8 @@ import NewAccount from './accounts/NewAccount';
 import NewCategory from './categories/NewCategory';
 import TxnTypeSelector from './common/TxnTypeSelector';
 
+import RenderAccounts from './accounts/AccountView';
+
 import {Container, AccordionSummary, Accordion, AccordionDetails} from '@material-ui/core';
 
 /*
@@ -21,20 +23,17 @@ class AppHome extends Component {
     accountToName: {},
     incomeCategories: [],
     expenseCategories: []
-
   }
 
   /*
-   * Runs on initial load. 
+   * Runs on initial load.
    */
   componentDidMount() {
-    this.getTxns(this.state.viewTxnType);
-    this.getAccounts();
-    this.getCategories();
+    this.refetchData(this.state.viewTxnType)
   }
 
   /*
-   * Helper method to retrieve all accounts in the db. 
+   * Helper method to retrieve all accounts in the db.
    * Also constructs a map of IDs to account names, so we know
    * which account ID has which name.
    */
@@ -52,13 +51,13 @@ class AppHome extends Component {
   }
 
   /*
-   * Retrieves all txns in the db. 
+   * Retrieves all txns in the db.
    * May also modify which txn type is being shown, if an argument is passed.
    */
   getTxns = (txnType) => {
     if (!txnType) {
       txnType = this.state.viewTxnType;
-    } 
+    }
     axios.get('/txnApi/txn')
       .then(res => {
         if (res.data) {
@@ -68,43 +67,49 @@ class AppHome extends Component {
           })
         }
       })
-      .catch(err => console.log(err)) 
+      .catch(err => console.log(err))
   }
 
   getCategories = () => {
     axios.get('/categoryApi/category')
       .then(res => {
         if (res.data) {
-          const expenseCategories = 
+          const expenseCategories =
             res.data
               .filter(obj => obj.categoryType === "Expense")
-              .map(obj => obj.categoryName);
-          const incomeCategories = 
+          const incomeCategories =
             res.data
               .filter(obj => obj.categoryType === "Income")
-              .map(obj => obj.categoryName);
 
           this.setState({
             expenseCategories,
             incomeCategories
-          }) 
+          })
         }
       })
       .catch(err => console.log(err))
   }
 
   /*
-   * Deletes a txn by ID. 
+   * Deletes a txn by ID.
    * TODO: Must re-calculate account amount (maybe on backend)
    */
   deleteTxn = (id) => {
     console.log("Deleting " + id);
-    axios.delete(`/txnApi/txn/${id}`)
-      .then(res => {
-        this.getTxns();
-        this.getAccounts();
-      })
+    return axios.delete(`/txnApi/txn/${id}`)
       .catch(err => console.log(err))
+  }
+
+  deleteAccount = (id) => {
+    console.log("Deleting account " + id);
+    return axios.delete(`/accountApi/account/${id}`)
+      .catch(err => console.log(err))
+  }
+
+  refetchData = (txnType) => {
+    this.getTxns(txnType)
+    this.getCategories()
+    return this.getAccounts()
   }
 
   /*
@@ -126,52 +131,73 @@ class AppHome extends Component {
   }
 
   render() {
-    let { 
-      txns, 
-      viewTxnType, 
-      accounts, 
-      expenseCategories, 
-      incomeCategories 
+    let {
+      txns,
+      viewTxnType,
+      accounts,
+      expenseCategories,
+      incomeCategories,
     } = this.state;
 
     return <div id="txnViewDiv">
-      <AnalysisHome/>
+      <Container className="analysisHome" maxWidth="false">
+        <Accordion>
+          <AccordionSummary>
+            Analysis
+          </AccordionSummary>
+          <AccordionDetails>
+            <AnalysisHome
+              expenseCategories={expenseCategories}
+              incomeCategories={incomeCategories}
+            />
+          </AccordionDetails>
+        </Accordion>
+        <Accordion>
+          <AccordionSummary>
+            Accounts
+          </AccordionSummary>
+          <AccordionDetails>
+            <RenderAccounts
+              accounts={accounts}
+              deleteAccount={this.deleteAccount}
+            />
+          </AccordionDetails>
+        </Accordion>
+      </Container>
       <Container className="newEntityForms" maxWidth="lg">
         <Accordion>
           <AccordionSummary>
-            New Txn 
+            New Txn
           </AccordionSummary>
-          <AccordionDetails> 
+          <AccordionDetails>
             <NewTxn
-              getTxns={this.getTxns}
-              getAccounts={this.getAccounts}
+              refetchData={this.refetchData}
               incomeCategories={incomeCategories}
               expenseCategories={expenseCategories}
               accounts={accounts}
             />
-          </AccordionDetails> 
+          </AccordionDetails>
         </Accordion>
         <Accordion>
           <AccordionSummary>
-            New Account 
+            New Account
           </AccordionSummary>
-          <AccordionDetails> 
+          <AccordionDetails>
             <NewAccount
               getAccounts={this.getAccounts}
             />
-          </AccordionDetails> 
+          </AccordionDetails>
         </Accordion>
         <Accordion>
           <AccordionSummary>
             New Category
           </AccordionSummary>
-          <AccordionDetails> 
+          <AccordionDetails>
             <NewCategory
               getCategories={this.getCategories}
             />
-          </AccordionDetails> 
+          </AccordionDetails>
         </Accordion>
-
       </Container>
       <TxnTypeSelector
         name="selectTxnViewButtons"
@@ -184,6 +210,7 @@ class AppHome extends Component {
         deleteTxn={this.deleteTxn}
         viewTxnType={viewTxnType}
         accountToName={this.accountToName}
+        refetchData={this.refetchData}
       />
       {/*TODO: move TxnTypeSelector into TxnView instead*/}
     </div>

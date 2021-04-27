@@ -2,15 +2,13 @@ import React from 'react';
 import {TextField} from '@material-ui/core';
 import {Autocomplete} from '@material-ui/lab';
 
-/** 
+/**
  * Shows a category of accounts and allows you to select one
  */
 
-const CategorySelector = ({name, id, selected, label, error, categories, onChange}) => {
-  const options = categories.map(category => <option 
-    value={category}
-    key={category}
-  >{category}</option>)
+const CategorySelector = ({name, selected, label, error, categories, onChange}) => {
+  const options = categories.map(category => category.categoryName)
+
 
   return (<div className="inputDiv">
     <label>{label}</label>
@@ -20,8 +18,8 @@ const CategorySelector = ({name, id, selected, label, error, categories, onChang
       value={selected}
       className="selectorDropdown"
       name={name}
-      onChange={(e, category) => onChange(category, name) }
-      options={categories}
+      onChange={(_, category) => onChange(category, name) }
+      options={options}
       renderInput={(params) => <TextField {...params}/>}
     />
     <div className="inputError">

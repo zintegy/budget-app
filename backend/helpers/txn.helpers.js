@@ -13,7 +13,7 @@ function createTxn(req, res, next) {
         const amount = parseFloat(req.body.amount)
 
         const txnDate = new Date(req.body.txnDate);
-        
+
         if (txnType != "Income") {
           AccountController.addAmountToAccount(
             req.body.sourceAccount, -1*amount, txnDate);
@@ -23,7 +23,7 @@ function createTxn(req, res, next) {
             req.body.destinationAccount, amount, txnDate);
         }
 
-        
+
         if (txnType == "Expense") {
           const category = req.body.expenseCategory;
           CategoryController.addAmountToCategory(category, amount, txnDate);
@@ -38,7 +38,7 @@ function createTxn(req, res, next) {
       }
       else {
         console.log("Txn error. Did not make changes.");
-      
+
       }
     }
   );
@@ -46,7 +46,7 @@ function createTxn(req, res, next) {
 
 function deleteTxnAndUpdateAccount(req, res, next) {
 console.log("test");
-  
+
   TxnController.delete(req, res, next)
     .then(response => {
       if (!!response.error) {
@@ -56,6 +56,7 @@ console.log("test");
 
       const txnDate = new Date(response.txnDate);
       console.log(txnDate);
+      console.log(response)
 
       const txnType = response.txnType;
       const amount = response.amount;
@@ -65,7 +66,7 @@ console.log("test");
       }
       if (txnType != "Expense") {
         AccountController.addAmountToAccount(
-          response.account, -1*amount, txnDate);
+          response.destinationAccount, -1*amount, txnDate);
       }
 
 

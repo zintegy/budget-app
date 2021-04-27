@@ -17,7 +17,7 @@ AccountController.create = (req, res, next) => {
     .then(data => res.json(data))
     .catch(data => {
       res.json(
-        {"errors": 
+        {"errors":
           DbErrorHandler.translateError(data["errors"])}
       );
     })
@@ -30,14 +30,20 @@ AccountController.delete = (req, res, next) => {
 };
 
 AccountController.update = (req, res, next) => {
+  console.log(req.params.id)
+  console.log(req.body)
   Account.findByIdAndUpdate(req.params.id, req.body)
-    .then(data => res.json(data))
-    .catch(data => res.json(data))
+    .then(data => {res.json(data); console.log(data)})
+    .catch(data => {res.json(data); console.log(data)})
 };
 
 AccountController.addAmountToAccount = (id, amount, date) => {
-  const month = date.getMonth().toString();
-  const year = date.getFullYear().toString();
+  const month = date.getUTCMonth().toString();
+  const year = date.getUTCFullYear().toString();
+  console.log("Adding amount to account")
+  console.log(id)
+  console.log(amount)
+  console.log(date)
 
   Account.find({"_id": id})
     .then(data => {
@@ -64,9 +70,9 @@ AccountController.addAmountToAccount = (id, amount, date) => {
       if (lastTxnDate < date) lastTxnDate = date;
 
       Account.findByIdAndUpdate(
-        id, 
+        id,
         {
-          "currentAmount": rounder.currencyRound(currentAmount + amount), 
+          "currentAmount": rounder.currencyRound(currentAmount + amount),
           "monthlyDelta": monthlyDelta,
           "lastTxnDate": lastTxnDate
         }

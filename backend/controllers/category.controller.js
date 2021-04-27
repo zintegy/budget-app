@@ -6,7 +6,7 @@ const DbErrorHandler = require('../helpers/DbErrorHandler');
 const CategoryController = {};
 
 CategoryController.get = (req, res, next) => {
-  Category.find(req.query) .sort([["categoryName"]])
+  Category.find(req.query).sort([["categoryName"]])
     .then(data => res.json(data))
     .catch(next);
 };
@@ -16,7 +16,7 @@ CategoryController.create = (req, res, next) => {
     .then(data => res.json(data))
     .catch(data => {
       res.json(
-        {"errors": 
+        {"errors":
           DbErrorHandler.translateError(data["errors"])}
       );
     })
@@ -35,12 +35,16 @@ CategoryController.update = (req, res, next) => {
 };
 
 CategoryController.addAmountToCategory = (categoryName, amount, date) => {
-  const month = date.getMonth().toString();
-  const year = date.getFullYear().toString();
+  const month = date.getUTCMonth().toString();
+  const year = date.getUTCFullYear().toString();
 
   console.log("Adding " + amount + " to " + categoryName);
   Category.find({"categoryName": categoryName})
     .then(data => {
+      console.log(date)
+      console.log(month)
+      console.log(year)
+      console.log(date.getDate())
       const categoryEntity = data[0];
       const monthlySpend = categoryEntity.monthlySpend;
       // if this is the first transaction in this year, create the new monthly map
@@ -59,7 +63,7 @@ CategoryController.addAmountToCategory = (categoryName, amount, date) => {
 
       monthlySpend.get(year).set(month, rounder.currencyRound(currentAmount + amount));
       Category.findByIdAndUpdate(
-        categoryEntity._id, 
+        categoryEntity._id,
         {"monthlySpend": monthlySpend}
       ).then(); // for some reason i need this .then(), otherwise the category doesn't update
     })
