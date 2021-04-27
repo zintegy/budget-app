@@ -1,2 +1,4 @@
+backend/db/*
 node_modules
 *.sw*
+.env
