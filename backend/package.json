@@ -11,6 +11,7 @@
     "watch": "nodemon index.js",
     "dbon": "mkdir -p ./db && mongod --dbpath ./db --replSet rs0",
     "dbprod": "mkdir -p ./dbprod && mongod --dbpath ./dbprod --replSet rs2",
+    "back": "\"yarn run watch\"",
     "dev": "concurrently \"yarn run watch\" \"cd ../frontend && yarn start\""
   },
   "keywords": [
@@ -20,6 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "concurrently": "^6.0.2",
     "cors": "^2.8.5",
     "create-react-app": "^4.0.0",
     "dotenv": "^8.2.0",
