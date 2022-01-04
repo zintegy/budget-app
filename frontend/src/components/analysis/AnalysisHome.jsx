@@ -5,9 +5,7 @@ import AnnualCategoryGraphs from './AnnualCategoryGraphs'
 
 class AnalysisHome extends Component {
   render() {
-    let {incomeCategories, expenseCategories} = this.props
-
-    const year = 2021
+    let {incomeCategories, expenseCategories, year} = this.props
 
     return (
       <div className="analysis">

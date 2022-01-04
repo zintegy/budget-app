@@ -7,6 +7,7 @@ import AnalysisHome from './analysis/AnalysisHome';
 import NewAccount from './accounts/NewAccount';
 import NewCategory from './categories/NewCategory';
 import TxnTypeSelector from './common/TxnTypeSelector';
+import YearSelector from './common/YearSelector';
 
 import RenderAccounts from './accounts/AccountView';
 
@@ -22,7 +23,8 @@ class AppHome extends Component {
     accounts: [],
     accountToName: {},
     incomeCategories: [],
-    expenseCategories: []
+    expenseCategories: [],
+    year: new Date().getFullYear(),
   }
 
   /*
@@ -130,6 +132,16 @@ class AppHome extends Component {
     return this.state.accountToName[accountId];
   }
 
+  /**
+   * helper method to change the current year.
+   */
+  yearOnChange = (e) => {
+    let target = e.target;
+    this.setState({
+      year: target.value
+    });
+  }
+
   render() {
     let {
       txns,
@@ -137,10 +149,18 @@ class AppHome extends Component {
       accounts,
       expenseCategories,
       incomeCategories,
+      year,
     } = this.state;
 
     return <div id="txnViewDiv">
+
       <Container className="analysisHome" maxWidth="false">
+        <YearSelector
+          name="yearSelector"
+          id="yearSelector"
+          onChange={this.yearOnChange}
+          value={year}
+        />
         <Accordion>
           <AccordionSummary>
             Analysis
@@ -149,6 +169,7 @@ class AppHome extends Component {
             <AnalysisHome
               expenseCategories={expenseCategories}
               incomeCategories={incomeCategories}
+              year={year}
             />
           </AccordionDetails>
         </Accordion>
@@ -211,6 +232,7 @@ class AppHome extends Component {
         viewTxnType={viewTxnType}
         accountToName={this.accountToName}
         refetchData={this.refetchData}
+        year={year}
       />
       {/*TODO: move TxnTypeSelector into TxnView instead*/}
     </div>

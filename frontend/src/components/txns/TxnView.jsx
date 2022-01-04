@@ -74,10 +74,10 @@ class ShowTxn extends Component {
 /*
  * Renders all transactions of type=viewTxnType.
  */
-const TxnView = ({ txns, deleteTxn, viewTxnType, accountToName, refetchData }) => {
+const TxnView = ({ txns, deleteTxn, viewTxnType, accountToName, refetchData, year }) => {
 
   let txnRows = (txns && txns.length > 0)
-    ? txns.filter(txn => txn.txnType === viewTxnType)
+    ? txns.filter(txn => txn.txnType === viewTxnType && new Date(txn.txnDate.substring(0, txn.txnDate.length - 1)).getFullYear() === year)
     .map(txn => <ShowTxn
       txn={txn}
       deleteTxn={deleteTxn}
