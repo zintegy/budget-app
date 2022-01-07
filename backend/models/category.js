@@ -24,6 +24,11 @@ const categorySchema = new Schema({
     of: {type: Map, of: Number},
   },
 
+  monthlyBudgetSingular: {
+    type: Number,
+    default: -1
+  },
+
   monthlySpend: {
     type: Map,
     of: {type: Map, of: Number},

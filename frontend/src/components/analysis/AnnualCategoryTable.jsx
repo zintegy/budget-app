@@ -32,6 +32,7 @@ class AnnualCategoryTable extends Component {
 function TableHeader() {
   return <tr>
     <td className="monthCategoryCell">Category</td>
+    <td className="monthBudgetCell">Budget</td>
     <td className="monthBudgetCell">Jan</td>
     <td className="monthBudgetCell">Feb</td>
     <td className="monthBudgetCell">Mar</td>
@@ -53,6 +54,12 @@ function TableCategoryRow(category, year) {
   const monthlySpend = category.monthlySpend;
   let months = [];
   let multiplier = category.categoryType === "Income" ? -1 : 1
+  if (category.monthlyBudgetSingular != -1) {
+    months.push(<td className="monthBudgetCell">${category.monthlyBudgetSingular}</td>)
+  }
+  else {
+    months.push(<td className="monthBudgetCell"></td>)
+  }
   for (let i = 0; i < 12; i++) {
     if (!!monthlySpend[year]) {
       months.push(<td className="monthBudgetCell">${multiplier*category.monthlySpend[year][i]}</td>)
