@@ -6,9 +6,10 @@ export default function AnnualCategoryGraphs(incomeCategories, expenseCategories
   const labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
   let income = Array(12).fill(0);
-  let expense = Array(12).fill(0);
+  let totalExpense = Array(12).fill(0);
 
   let houseAndTax = Array(12).fill(0);
+  let typicalExpense = Array(12).fill(0);
 
   for (let i = 0; i < 12; i++) {
     incomeCategories.forEach(category => {
@@ -19,8 +20,9 @@ export default function AnnualCategoryGraphs(incomeCategories, expenseCategories
 
     expenseCategories.forEach(category => {
       if (!!category['monthlySpend'][year]) {
-        if (category['categoryName'] != 'House' && category['categoryName'] != 'Government/Tax') {
-          expense[i] += category['monthlySpend'][year][i]
+        totalExpense[i] += category['monthlySpend'][year][i]
+        if (category['categoryName'] !== 'House' && category['categoryName'] !== 'Government/Tax') {
+          typicalExpense[i] += category['monthlySpend'][year][i]
         }
         else {
           houseAndTax[i] += category['monthlySpend'][year][i]
@@ -40,10 +42,16 @@ export default function AnnualCategoryGraphs(incomeCategories, expenseCategories
         borderColor: 'rgba(255, 99, 132, 0.2)',
       },
       {
-        label: "Expense",
-        data: expense,
+        label: "Total Expense",
+        data: totalExpense,
         backgroundColor: 'rgb(54, 162, 235)',
         borderColor: 'rgba(54, 162, 235, 0.2)',
+      },
+      {
+        label: "Regular Expense",
+        data: typicalExpense,
+        backgroundColor: 'rgb(240, 240, 130)',
+        borderColor: 'rgba(200, 200, 130, 0.2)',
       },
       {
         label: "House and Tax",
