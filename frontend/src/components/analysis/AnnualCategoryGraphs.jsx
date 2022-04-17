@@ -8,6 +8,7 @@ export default function AnnualCategoryGraphs(incomeCategories, expenseCategories
   let income = Array(12).fill(0);
   let expense = Array(12).fill(0);
 
+  let houseAndTax = Array(12).fill(0);
 
   for (let i = 0; i < 12; i++) {
     incomeCategories.forEach(category => {
@@ -18,11 +19,15 @@ export default function AnnualCategoryGraphs(incomeCategories, expenseCategories
 
     expenseCategories.forEach(category => {
       if (!!category['monthlySpend'][year]) {
-        expense[i] += category['monthlySpend'][year][i]
+        if (category['categoryName'] != 'House' && category['categoryName'] != 'Government/Tax') {
+          expense[i] += category['monthlySpend'][year][i]
+        }
+        else {
+          houseAndTax[i] += category['monthlySpend'][year][i]
+        }
       }
     })
   }
-
 
 
   let data = {
@@ -40,6 +45,13 @@ export default function AnnualCategoryGraphs(incomeCategories, expenseCategories
         backgroundColor: 'rgb(54, 162, 235)',
         borderColor: 'rgba(54, 162, 235, 0.2)',
       },
+      {
+        label: "House and Tax",
+        data: houseAndTax,
+        backgroundColor: 'rgb(54, 235, 162)',
+        borderColor: 'rgba(54, 235, 162, 0.2)',
+      },
+
     ]
   }
 
