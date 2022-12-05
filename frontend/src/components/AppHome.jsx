@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import axios from 'axios';
 
+import http from "./http-common";
 import TxnView from './txns/TxnView';
 import NewTxn from './txns/NewTxn';
 import AnalysisHome from './analysis/AnalysisHome';
@@ -40,7 +40,7 @@ class AppHome extends Component {
    * which account ID has which name.
    */
   getAccounts = () => {
-    return axios.get('/accountApi/account')
+    return http.get('/accountApi/account')
       .then(res => {
         if (res.data) {
           let accountToName = {}
@@ -60,7 +60,7 @@ class AppHome extends Component {
     if (!txnType) {
       txnType = this.state.viewTxnType;
     }
-    axios.get('/txnApi/txn')
+    http.get('/txnApi/txn')
       .then(res => {
         if (res.data) {
           this.setState({
@@ -73,7 +73,7 @@ class AppHome extends Component {
   }
 
   getCategories = () => {
-    axios.get('/categoryApi/category')
+    http.get('/categoryApi/category')
       .then(res => {
         if (res.data) {
           const expenseCategories =
@@ -98,13 +98,13 @@ class AppHome extends Component {
    */
   deleteTxn = (id) => {
     console.log("Deleting " + id);
-    return axios.delete(`/txnApi/txn/${id}`)
+    return http.delete(`/txnApi/txn/${id}`)
       .catch(err => console.log(err))
   }
 
   deleteAccount = (id) => {
     console.log("Deleting account " + id);
-    return axios.delete(`/accountApi/account/${id}`)
+    return http.delete(`/accountApi/account/${id}`)
       .catch(err => console.log(err))
   }
 

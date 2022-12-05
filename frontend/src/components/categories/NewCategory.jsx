@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import axios from 'axios';
+import http from "../http-common";
 import TextInput from '../common/TextInput';
 import {Button, Container} from '@material-ui/core';
 import RadioInput from '../common/RadioInput';
@@ -12,8 +12,8 @@ class NewCategory extends Component {
     successMessage: ""
   }
 
-  /* 
-   * Runs on initial load. 
+  /*
+   * Runs on initial load.
    */
   componentDidMount = () => {
   }
@@ -31,7 +31,7 @@ class NewCategory extends Component {
 
     category.isNecessity = category.isNecessity === "Yes";
 
-    axios.post('/categoryApi/category', category) 
+    http.post('/categoryApi/category', category)
       .then(res => {
         if (res.data && res.data.errors) {
           this.setState({
@@ -46,7 +46,7 @@ class NewCategory extends Component {
         this.props.getCategories();
       })
       .catch(err => console.log(err));
-    
+
   }
 
   inputOnChange = (e) => {
@@ -58,7 +58,7 @@ class NewCategory extends Component {
   }
 
   render() {
-    let { 
+    let {
       categoryType,
       categoryName,
       isNecessity,
@@ -67,7 +67,7 @@ class NewCategory extends Component {
     } = this.state;
 
     return (<Container maxWidth="sm">
-      <div id="newTxnForm"> 
+      <div id="newTxnForm">
         <RadioInput
           onChange={this.inputOnChange}
           value={categoryType}
@@ -92,7 +92,7 @@ class NewCategory extends Component {
           />
         <div>
           <Button
-            className="newCategorySubmit" 
+            className="newCategorySubmit"
             onClick={this.addCategory}
           >
             Add Category

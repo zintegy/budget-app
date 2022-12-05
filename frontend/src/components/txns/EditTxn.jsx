@@ -8,21 +8,22 @@ import CategorySelector, {categoryOnChange} from '../common/CategorySelector';
 import AccountSelector, { selectorOnChange, updateSelectorInput } from '../common/AccountSelector';
 import DateInput from '../common/DateInput';
 
-class NewTxn extends Component {
+class EditTxn extends Component {
 
   state = {
-    txnType: TxnType.EXPENSE,
-    amount : "",
+    txnType: this.props.txnType || TxnType.EXPENSE,
+    amount : this.props.amount || "",
     errors: {},
-    merchant: "",
-    txnDate: "",
-    sourceAccount: null,
-    sourceAccountInput: "",
-    destinationAccount: null,
-    destinationAccountInput: "",
+    description: this.props.description || "",
+    merchant: this.props.merchant || "",
+    txnDate: this.props.txnDate || "",
+    sourceAccount: this.props.sourceAccount || null,
+    sourceAccountInput: this.props.sourceAccount || "",
+    destinationAccount: this.props.destinationAccount || null,
+    destinationAccountInput: this.props.destinationAccount || "",
     successMessage: "",
-    incomeCategory: null,
-    expenseCategory: null
+    incomeCategory: this.props.incomeCategory || null,
+    expenseCategory: this.props.expenseCategory || null
   }
 
   /*
@@ -191,4 +192,4 @@ class NewTxn extends Component {
     );
   }
 }
-export default NewTxn;
+export default EditTxn;
