@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import axios from 'axios';
+import http from "../http-common";
 import TextInput from '../common/TextInput';
 import {Button, Container} from '@material-ui/core';
 import AccountType from '../../utils/AccountType';
@@ -15,8 +15,8 @@ class NewAccount extends Component {
     successMessage: "",
   }
 
-  /* 
-   * Runs on initial load. 
+  /*
+   * Runs on initial load.
    */
   componentDidMount = () => {
   }
@@ -33,9 +33,9 @@ class NewAccount extends Component {
     });
 
     account.isLiquid = account.isLiquid === "Yes";
-    
 
-    axios.post('/accountApi/account', account) 
+
+    http.post('/accountApi/account', account)
       .then(res => {
         if (res.data && res.data.errors) {
           this.setState({
@@ -50,7 +50,7 @@ class NewAccount extends Component {
         this.props.getAccounts();
       })
       .catch(err => console.log(err));
-    
+
   }
 
   inputOnChange = (e) => {
@@ -62,17 +62,17 @@ class NewAccount extends Component {
   }
 
   render() {
-    let { 
+    let {
       accountType,
       accountName,
       startingAmount,
-      isLiquid, 
+      isLiquid,
       errors,
       successMessage
     } = this.state;
 
     return (<Container maxWidth="sm">
-      <div id="newTxnForm"> 
+      <div id="newTxnForm">
         <AccountTypeSelector
           onChange={this.inputOnChange}
           name="accountType"
@@ -103,7 +103,7 @@ class NewAccount extends Component {
           />
         <div>
           <Button
-            className="newAccountSubmit" 
+            className="newAccountSubmit"
             onClick={this.addAccount}
           >
             Add Account
