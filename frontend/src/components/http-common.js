@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export default axios.create({
-  baseURL: "http://localhost:5000/",
+  baseURL: "https://yitz-budget.deta.dev/",
   headers: {
     "Content-type": "application/json"
   }
