@@ -29,14 +29,14 @@ mongoose.connect('mongodb+srv://zintegy:mongodb@cluster0.3xxik.mongodb.net/myFir
 mongoose.Promise = global.Promise;
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://ydeng-budget.cyclic.app/");
+  res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Methods",  "*");
   next();
 });
 
 app.use(cors({
-  origin: "https://ydeng-budget.cyclic.app/"
+  origin: "*"
 }));
 
 app.use(bodyParser.json());
