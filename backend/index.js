@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const txnRoutes = require('./routes/txn.routes');
 const accountRoutes = require('./routes/account.routes');
 const categoryRoutes = require('./routes/category.routes');
+const cors = require('cors')
 
 const path = require('path');
 require('dotenv').config();
@@ -31,10 +32,12 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "https://ydeng-budget.cyclic.app/");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Methods",  "*");
-
-
   next();
 });
+
+app.use(cors({
+  origin: "https://ydeng-budget.cyclic.app/"
+}));
 
 app.use(bodyParser.json());
 
