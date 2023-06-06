@@ -1,9 +1,8 @@
 import axios from "axios";
 
 export default axios.create({
-  baseURL: "https://yitz-budget.deta.dev/",
+  baseURL: "https://budgetappapi-1-s6436930.deta.app/",
   headers: {
     "Content-type": "application/json",
-    "Access-Control-Allow-Origin": "https://ydeng-budget.cyclic.app/"
   }
 });
