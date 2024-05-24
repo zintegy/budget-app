@@ -54,7 +54,7 @@ function TableCategoryRow(category, year) {
   const monthlySpend = category.monthlySpend;
   let months = [];
   let multiplier = category.categoryType === "Income" ? -1 : 1
-  if (category.monthlyBudgetSingular != -1) {
+  if (category.monthlyBudgetSingular !== -1) {
     months.push(<td className="monthBudgetCell">${category.monthlyBudgetSingular}</td>)
   }
   else {
