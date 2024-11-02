@@ -11,7 +11,7 @@ require('dotenv').config();
 
 const app = express();
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5001;
 
 mongoose.set('useFindAndModify', false);
 
@@ -22,7 +22,7 @@ mongoose.set('useFindAndModify', false);
 const username = process.env.USERNAME
 const password = process.env.PASSWORD
 //mongoose.connect('mongodb+srv://' + username + ':' + password + '@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
-mongoose.connect('mongodb+srv://zintegy:mongodb@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+mongoose.connect('mongodb+srv://zintegy:mongodb@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',  {useNewUrlParser: true })
   .then(() => console.log("DB connected"))
   .catch(err => console.log(err));
 
@@ -50,11 +50,11 @@ app.use((err, req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+//app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));});
+//app.get('*', (req, res) => {
+  //res.sendFile(path.join(__dirname, '../frontend/build/index.html'));});
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`)
