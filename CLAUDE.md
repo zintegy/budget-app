@@ -40,3 +40,5 @@
 - [ ] make the page generally look nicer and easier to use
 - [ ] integrate sankey diagrams directly into the app
 - [ ] automatically add more years in the year dropdown as we reach the future years
+- [ ] add real support for an 'edit txn' popup, rather than deleting and re-creating. for now, don't allow the source accounts to change - only title, description, etc.
+- [ ] add support for modifying the accounts and categories of an existing transaction. this means the transaction has to be removed from those accounts (and thus erasing the effect the transaction had on those accounts/categories), then added to the new account/category.

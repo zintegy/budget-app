@@ -23,7 +23,8 @@ class EditTxn extends Component {
     destinationAccountInput: this.props.destinationAccount || "",
     successMessage: "",
     incomeCategory: this.props.incomeCategory || null,
-    expenseCategory: this.props.expenseCategory || null
+    expenseCategory: this.props.expenseCategory || null,
+    isSubmitting: false
   }
 
   /*
@@ -42,9 +43,10 @@ class EditTxn extends Component {
    */
   addTxn = () => {
     let txn = Object.assign({}, this.state)
-    // clear errors
     this.setState({
-      errors: {}
+      errors: {},
+      successMessage: "",
+      isSubmitting: true
     });
 
     // always use UTC midnight
@@ -76,7 +78,8 @@ class EditTxn extends Component {
             this, txn.destinationAccount, "destinationAccount", this.props.accounts);
         });
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => this.setState({ isSubmitting: false }));
 
   }
 
@@ -185,7 +188,9 @@ class EditTxn extends Component {
         <div>
           <Button
             className="newTxnSubmit"
-            onClick={this.addTxn}>Add Txn</Button>
+            onClick={this.addTxn}
+            disabled={this.state.isSubmitting}
+          >{this.state.isSubmitting ? "Submitting..." : "Add Txn"}</Button>
           {successMessage}
         </div>
       </div></Container>

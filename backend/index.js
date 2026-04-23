@@ -7,7 +7,8 @@ const categoryRoutes = require('./routes/category.routes');
 const cors = require('cors')
 
 const path = require('path');
-require('dotenv').config();
+const envFile = process.env.NODE_ENV === 'development' ? '.env.development' : '.env';
+require('dotenv').config({ path: path.join(__dirname, envFile) });
 
 const app = express();
 
@@ -15,15 +16,8 @@ const port = process.env.PORT || 5004;
 
 mongoose.set('useFindAndModify', false);
 
-//mongoose.connect(process.env.DB, {useNewUrlParser: true})
-//mongoose.connect('mongodb://localhost:27017,localhost:27018,localhost:27019/mern-starter', {useNewUrlParser: true, replicaSet: 'rs0'})
-//  .then(() => console.log("DB connected"))
-//  .catch(err => console.log(err));
-const username = process.env.USERNAME
-const password = process.env.PASSWORD
-//mongoose.connect('mongodb+srv://' + username + ':' + password + '@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
-mongoose.connect('mongodb+srv://zintegy:mongodb@cluster0.3xxik.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',  {useNewUrlParser: true })
-  .then(() => console.log("DB connected"))
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true })
+  .then(() => console.log(`DB connected (${process.env.NODE_ENV || 'production'})`))
   .catch(err => console.log(err));
 
 mongoose.Promise = global.Promise;

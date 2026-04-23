@@ -13,6 +13,7 @@ class NewAccount extends Component {
     errors: {},
     isLiquid: "Yes",
     successMessage: "",
+    isSubmitting: false
   }
 
   /*
@@ -27,9 +28,10 @@ class NewAccount extends Component {
   addAccount = () => {
     let account = Object.assign({}, this.state)
 
-    // clear errors
     this.setState({
-      errors: {}
+      errors: {},
+      successMessage: "",
+      isSubmitting: true
     });
 
     account.isLiquid = account.isLiquid === "Yes";
@@ -49,7 +51,8 @@ class NewAccount extends Component {
         }
         this.props.getAccounts();
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => this.setState({ isSubmitting: false }));
 
   }
 
@@ -105,8 +108,9 @@ class NewAccount extends Component {
           <Button
             className="newAccountSubmit"
             onClick={this.addAccount}
+            disabled={this.state.isSubmitting}
           >
-            Add Account
+            {this.state.isSubmitting ? "Submitting..." : "Add Account"}
           </Button>
           {successMessage}
         </div>

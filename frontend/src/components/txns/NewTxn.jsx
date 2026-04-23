@@ -22,7 +22,8 @@ class NewTxn extends Component {
     destinationAccountInput: "",
     successMessage: "",
     incomeCategory: null,
-    expenseCategory: null
+    expenseCategory: null,
+    isSubmitting: false
   }
 
   /*
@@ -41,9 +42,10 @@ class NewTxn extends Component {
    */
   addTxn = () => {
     let txn = Object.assign({}, this.state)
-    // clear errors
     this.setState({
-      errors: {}
+      errors: {},
+      successMessage: "",
+      isSubmitting: true
     });
 
     // always use UTC midnight
@@ -75,7 +77,8 @@ class NewTxn extends Component {
             this, txn.destinationAccount, "destinationAccount", this.props.accounts);
         });
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => this.setState({ isSubmitting: false }));
 
   }
 
@@ -184,7 +187,9 @@ class NewTxn extends Component {
         <div>
           <Button
             className="newTxnSubmit"
-            onClick={this.addTxn}>Add Txn</Button>
+            onClick={this.addTxn}
+            disabled={this.state.isSubmitting}
+          >{this.state.isSubmitting ? "Submitting..." : "Add Txn"}</Button>
           {successMessage}
         </div>
       </div></Container>

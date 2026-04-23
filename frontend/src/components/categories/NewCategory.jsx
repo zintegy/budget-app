@@ -9,7 +9,8 @@ class NewCategory extends Component {
   state = {
     errors: {},
     isLiquid: "Yes",
-    successMessage: ""
+    successMessage: "",
+    isSubmitting: false
   }
 
   /*
@@ -24,9 +25,10 @@ class NewCategory extends Component {
   addCategory = () => {
     let category = Object.assign({}, this.state)
 
-    // clear errors
     this.setState({
-      errors: {}
+      errors: {},
+      successMessage: "",
+      isSubmitting: true
     });
 
     category.isNecessity = category.isNecessity === "Yes";
@@ -45,7 +47,8 @@ class NewCategory extends Component {
         }
         this.props.getCategories();
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => this.setState({ isSubmitting: false }));
 
   }
 
@@ -94,8 +97,9 @@ class NewCategory extends Component {
           <Button
             className="newCategorySubmit"
             onClick={this.addCategory}
+            disabled={this.state.isSubmitting}
           >
-            Add Category
+            {this.state.isSubmitting ? "Submitting..." : "Add Category"}
           </Button>
           {successMessage}
         </div>

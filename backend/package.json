@@ -8,11 +8,11 @@
     "test": "jest -i --verbose --coverage --runInBand",
     "start": "node index.js",
     "dboff": "killall mongod",
-    "watch": "nodemon index.js",
+    "watch": "NODE_ENV=development nodemon index.js",
     "dbon": "mkdir -p ./db && mongod --dbpath ./db --replSet rs0",
     "dbprod": "mkdir -p ./dbprod && mongod --dbpath ./dbprod --replSet rs2",
     "back": "\"yarn run watch\"",
-    "dev": "concurrently \"yarn run watch\" \"cd ../frontend && yarn start\""
+    "dev": "NODE_ENV=development nodemon index.js"
   },
   "keywords": [
     "todo"
