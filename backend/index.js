@@ -16,14 +16,14 @@ const port = process.env.PORT || 5004;
 
 mongoose.set('useFindAndModify', false);
 
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true })
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log(`DB connected (${process.env.NODE_ENV || 'production'})`))
   .catch(err => console.log(err));
 
 mongoose.Promise = global.Promise;
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN
+  origin: process.env.CORS_ORIGIN.split(',')
 }));
 
 app.use(bodyParser.json());
