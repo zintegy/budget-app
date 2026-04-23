@@ -36,9 +36,10 @@
 - [x] Don't allow any edits to forms while submit http requests are still pending, eg for transaction creation
 - [x] Be more clear when an http request has failed
 - [x] paginate the TXN retrieval so the initial pageload doesn't take forever
-- [ ] provide an option to re-calculate the "current balance" on an account or on a category based on all transactions ever. if there is a mismatch, confirm with the user before overwriting the old value(s).
+- [x] provide an option to re-calculate the "current balance" on an account or on a category based on all transactions ever. if there is a mismatch, confirm with the user before overwriting the old value(s).
 - [ ] make the page generally look nicer and easier to use
 - [ ] integrate sankey diagrams directly into the app
 - [ ] automatically add more years in the year dropdown as we reach the future years
 - [ ] add real support for an 'edit txn' popup, rather than deleting and re-creating. for now, don't allow the source accounts to change - only title, description, etc.
 - [ ] add support for modifying the accounts and categories of an existing transaction. this means the transaction has to be removed from those accounts (and thus erasing the effect the transaction had on those accounts/categories), then added to the new account/category.
+- [ ] add a 'bulk update' approach whre i can copy data from a bank statement/website and have those transactions be added with an option to adjust multiple options' descriptions and categories at once

@@ -29,6 +29,8 @@ class AppHome extends Component {
     fetchError: "",
     totalTxnCount: 0,
     isLoadingMore: false,
+    reconcileResult: null,
+    isReconciling: false,
   }
 
   /*
@@ -170,6 +172,23 @@ class AppHome extends Component {
     });
   }
 
+  reconcile = (apply = false) => {
+    this.setState({ isReconciling: true });
+    const url = apply ? '/accountApi/account/reconcile?apply=true' : '/accountApi/account/reconcile';
+    http.post(url)
+      .then(res => {
+        if (res.data) {
+          this.setState({ reconcileResult: res.data });
+          if (apply) {
+            this.getAccounts();
+            this.getCategories();
+          }
+        }
+      })
+      .catch(() => this.setState({ fetchError: "Reconciliation failed." }))
+      .finally(() => this.setState({ isReconciling: false }));
+  }
+
   refetchData = (txnType, { skipTxns } = {}) => {
     if (!skipTxns) this.getTxns(txnType)
     this.getCategories()
@@ -215,7 +234,12 @@ class AppHome extends Component {
       fetchError,
       totalTxnCount,
       isLoadingMore,
+      reconcileResult,
+      isReconciling,
     } = this.state;
+
+    const hasMismatches = reconcileResult &&
+      (reconcileResult.accountDiffs.length > 0 || reconcileResult.categoryDiffs.length > 0);
 
     return <div id="txnViewDiv">
       {fetchError && <Alert severity="error" onClose={() => this.setState({ fetchError: "" })}>{fetchError}</Alert>}
@@ -250,6 +274,52 @@ class AppHome extends Component {
             />
           </AccordionDetails>
         </Accordion>
+        <div>
+          <Button onClick={() => this.reconcile(false)} disabled={isReconciling}>
+            {isReconciling ? "Checking..." : "Reconcile"}
+          </Button>
+          {reconcileResult && !reconcileResult.applied && !hasMismatches && (
+            <Alert severity="success" onClose={() => this.setState({ reconcileResult: null })}>
+              All balances are correct.
+            </Alert>
+          )}
+          {reconcileResult && reconcileResult.applied && (
+            <Alert severity="success" onClose={() => this.setState({ reconcileResult: null })}>
+              Fixes applied successfully.
+            </Alert>
+          )}
+          {hasMismatches && !reconcileResult.applied && <div>
+            <Alert severity="warning">
+              Mismatches found:
+              {reconcileResult.accountDiffs.map(d => (
+                <div key={d.id}>
+                  <strong>Account "{d.name}"</strong>: stored ${d.storedAmount}, expected ${d.expectedAmount} (off by ${d.diff})
+                  {Object.keys(d.monthDiffs).length > 0 && Object.entries(d.monthDiffs).map(([year, months]) =>
+                    Object.entries(months).map(([month, v]) => (
+                      <div key={`${d.id}-${year}-${month}`} style={{marginLeft: 16}}>
+                        {year}/{parseInt(month)+1}: stored ${v.stored}, expected ${v.expected} (off by ${v.diff})
+                      </div>
+                    ))
+                  )}
+                </div>
+              ))}
+              {reconcileResult.categoryDiffs.map(d => (
+                <div key={d.id}>
+                  Category "{d.name}": {Object.entries(d.monthDiffs).map(([year, months]) =>
+                    Object.entries(months).map(([month, v]) => (
+                      <span key={`${year}-${month}`}>
+                        {year}/{parseInt(month)+1}: stored ${v.stored}, expected ${v.expected} (off by ${v.diff}){' '}
+                      </span>
+                    ))
+                  )}
+                </div>
+              ))}
+            </Alert>
+            <Button onClick={() => this.reconcile(true)} disabled={isReconciling}>
+              Apply Fixes
+            </Button>
+          </div>}
+        </div>
       </Container>
       <Container className="newEntityForms" maxWidth="lg">
         <Accordion>

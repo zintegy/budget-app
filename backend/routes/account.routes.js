@@ -7,6 +7,9 @@ router.route('/account')
   .get(AccountController.get)
   .post(AccountController.create);
 
+router.route('/account/reconcile')
+  .post(AccountController.reconcile);
+
 router.route('/account/:id')
   .delete(AccountController.delete)
   .put(AccountController.update);
