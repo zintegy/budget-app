@@ -11,7 +11,7 @@ import YearSelector from './common/YearSelector';
 
 import RenderAccounts from './accounts/AccountView';
 
-import {Container, AccordionSummary, Accordion, AccordionDetails} from '@material-ui/core';
+import {Button, Container, AccordionSummary, Accordion, AccordionDetails} from '@material-ui/core';
 import {Alert} from '@material-ui/lab';
 
 /*
@@ -27,6 +27,8 @@ class AppHome extends Component {
     expenseCategories: [],
     year: new Date().getFullYear(),
     fetchError: "",
+    totalTxnCount: 0,
+    isLoadingMore: false,
   }
 
   /*
@@ -62,16 +64,55 @@ class AppHome extends Component {
     if (!txnType) {
       txnType = this.state.viewTxnType;
     }
-    http.get('/txnApi/txn')
+    http.get(`/txnApi/txn?year=${this.state.year}&limit=50`)
       .then(res => {
         if (res.data) {
           this.setState({
-            txns : res.data,
+            txns: res.data.txns,
+            totalTxnCount: res.data.totalCount,
             viewTxnType: txnType
           })
         }
       })
       .catch(() => this.setState({ fetchError: "Failed to load transactions." }))
+  }
+
+  loadMoreTxns = () => {
+    const { txns, year, isLoadingMore } = this.state;
+    if (isLoadingMore || txns.length === 0) return;
+
+    const lastTxn = txns[txns.length - 1];
+    this.setState({ isLoadingMore: true });
+
+    http.get(`/txnApi/txn?year=${year}&cursorDate=${lastTxn.txnDate}&cursorId=${lastTxn._id}&limit=50`)
+      .then(res => {
+        if (res.data) {
+          this.setState(prev => ({
+            txns: [...prev.txns, ...res.data.txns],
+          }))
+        }
+      })
+      .catch(() => this.setState({ fetchError: "Failed to load more transactions." }))
+      .finally(() => this.setState({ isLoadingMore: false }));
+  }
+
+  loadAllTxns = () => {
+    const { year, isLoadingMore } = this.state;
+    if (isLoadingMore) return;
+
+    this.setState({ isLoadingMore: true });
+
+    http.get(`/txnApi/txn?year=${year}&limit=999999`)
+      .then(res => {
+        if (res.data) {
+          this.setState({
+            txns: res.data.txns,
+            totalTxnCount: res.data.totalCount,
+          })
+        }
+      })
+      .catch(() => this.setState({ fetchError: "Failed to load all transactions." }))
+      .finally(() => this.setState({ isLoadingMore: false }));
   }
 
   getCategories = () => {
@@ -110,8 +151,27 @@ class AppHome extends Component {
       .catch(() => this.setState({ fetchError: "Failed to delete account." }))
   }
 
-  refetchData = (txnType) => {
-    this.getTxns(txnType)
+  insertTxn = (newTxn) => {
+    this.setState(prev => {
+      const txns = [...prev.txns];
+      const insertIdx = txns.findIndex(t => {
+        const tDate = new Date(t.txnDate).getTime();
+        const newDate = new Date(newTxn.txnDate).getTime();
+        if (tDate < newDate) return true;
+        if (tDate === newDate && t._id < newTxn._id) return true;
+        return false;
+      });
+      if (insertIdx === -1) {
+        txns.push(newTxn);
+      } else {
+        txns.splice(insertIdx, 0, newTxn);
+      }
+      return { txns, totalTxnCount: prev.totalTxnCount + 1 };
+    });
+  }
+
+  refetchData = (txnType, { skipTxns } = {}) => {
+    if (!skipTxns) this.getTxns(txnType)
     this.getCategories()
     return this.getAccounts()
   }
@@ -141,7 +201,7 @@ class AppHome extends Component {
     let target = e.target;
     this.setState({
       year: target.value
-    });
+    }, () => this.refetchData(this.state.viewTxnType));
   }
 
   render() {
@@ -153,6 +213,8 @@ class AppHome extends Component {
       incomeCategories,
       year,
       fetchError,
+      totalTxnCount,
+      isLoadingMore,
     } = this.state;
 
     return <div id="txnViewDiv">
@@ -197,6 +259,7 @@ class AppHome extends Component {
           <AccordionDetails>
             <NewTxn
               refetchData={this.refetchData}
+              insertTxn={this.insertTxn}
               incomeCategories={incomeCategories}
               expenseCategories={expenseCategories}
               accounts={accounts}
@@ -230,13 +293,18 @@ class AppHome extends Component {
         onChange={this.viewTxnOnChange}
         value={viewTxnType}
       />
+      <Button onClick={this.loadAllTxns} disabled={isLoadingMore}>
+        {isLoadingMore ? "Loading..." : "Load All"}
+      </Button>
       <TxnView
         txns={txns}
         deleteTxn={this.deleteTxn}
         viewTxnType={viewTxnType}
         accountToName={this.accountToName}
         refetchData={this.refetchData}
-        year={year}
+        loadMoreTxns={this.loadMoreTxns}
+        hasMore={txns.length < totalTxnCount}
+        isLoadingMore={isLoadingMore}
       />
       {/*TODO: move TxnTypeSelector into TxnView instead*/}
     </div>

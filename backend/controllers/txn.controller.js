@@ -5,11 +5,49 @@ const DbErrorHandler = require('../helpers/DbErrorHandler');
 const TxnController = {};
 
 TxnController.search = (req, res, next) => {
-  if (req.query.merchant) {
-    req.query.capitalMerchant = req.query.merchant;
+  const { year, cursorDate, cursorId, limit, ...query } = req.query;
+
+  if (query.merchant) {
+    query.capitalMerchant = query.merchant;
   }
-  Txn.find(req.query).sort([["txnDate", -1]])
-    .then(data => res.json(data))
+
+  const filter = { ...query };
+
+  if (year) {
+    const y = parseInt(year);
+    filter.txnDate = {
+      $gte: new Date(Date.UTC(y, 0, 1)),
+      $lt: new Date(Date.UTC(y + 1, 0, 1))
+    };
+  }
+
+  if (cursorDate && cursorId) {
+    const cursorFilter = {
+      $or: [
+        { txnDate: { $lt: new Date(cursorDate) } },
+        { txnDate: new Date(cursorDate), _id: { $lt: cursorId } }
+      ]
+    };
+    if (filter.txnDate) {
+      filter.$and = [{ txnDate: filter.txnDate }, cursorFilter];
+      delete filter.txnDate;
+    } else {
+      Object.assign(filter, cursorFilter);
+    }
+  }
+
+  const maxResults = parseInt(limit) || 100;
+
+  Promise.all([
+    Txn.find(filter).sort([["txnDate", -1], ["_id", -1]]).limit(maxResults),
+    Txn.countDocuments(year ? {
+      txnDate: {
+        $gte: new Date(Date.UTC(parseInt(year), 0, 1)),
+        $lt: new Date(Date.UTC(parseInt(year) + 1, 0, 1))
+      }
+    } : query)
+  ])
+    .then(([txns, totalCount]) => res.json({ txns, totalCount }))
     .catch(next);
 };
 

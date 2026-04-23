@@ -72,8 +72,9 @@ class NewTxn extends Component {
           this.setState({
             successMessage: "Success!"
           })
+          this.props.insertTxn(res.data);
         }
-        this.props.refetchData(txn.txnType).then(() => {
+        this.props.refetchData(txn.txnType, { skipTxns: true }).then(() => {
           updateSelectorInput(
             this, txn.sourceAccount, "sourceAccount", this.props.accounts);
           updateSelectorInput(

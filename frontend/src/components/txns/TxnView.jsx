@@ -73,41 +73,67 @@ class ShowTxn extends Component {
 
 /*
  * Renders all transactions of type=viewTxnType.
+ * Automatically loads more when the user scrolls near the bottom.
  */
-const TxnView = ({ txns, deleteTxn, viewTxnType, accountToName, refetchData, year }) => {
+class TxnView extends Component {
 
-  let txnRows = (txns && txns.length > 0)
-    ? txns.filter(txn => txn.txnType === viewTxnType && new Date(txn.txnDate.substring(0, txn.txnDate.length - 1)).getFullYear() === year)
-    .map(txn => <ShowTxn
-      txn={txn}
-      deleteTxn={deleteTxn}
-      accountToName={accountToName}
-      refetchData={refetchData}
-      viewTxnType={viewTxnType}
-      />)
-    : [];
+  componentDidMount() {
+    window.addEventListener('scroll', this.handleScroll);
+  }
 
-  if (txnRows.length === 0) {
-    return <table className="txnTable"><tbody><tr><td>No txns</td></tr></tbody></table> }
-  let headerArray = [];
-  if (viewTxnType === "Expense") headerArray = expenseHeaders;
-  else if (viewTxnType === "Income") headerArray = incomeHeaders;
-  else if (viewTxnType === "Transfer") headerArray = transferHeaders;
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
+  }
 
-  let header = <tr>{headerArray.map(header => <td key={header}>{header}</td>)}</tr>
+  handleScroll = () => {
+    const { hasMore, isLoadingMore, loadMoreTxns } = this.props;
+    if (!hasMore || isLoadingMore) return;
 
-    // leave commented unless you need it
-    let deleteButton = <Button onClick={() => massDelete(txns, deleteTxn)}> Delete All </Button>
-    deleteButton = "";
+    const scrolledNearBottom =
+      window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
 
-    return <div>
-      {deleteButton}
-      <table className="txnTable"><tbody>{header}{
-        txnRows.length > 0
-          ? txnRows
-          : <tr key="notxn"><td>No txns</td></tr>
-      }</tbody></table>
-    </div>
+    if (scrolledNearBottom) {
+      loadMoreTxns();
+    }
+  }
+
+  render() {
+    let { txns, deleteTxn, viewTxnType, accountToName, refetchData, isLoadingMore } = this.props;
+
+    let txnRows = (txns && txns.length > 0)
+      ? txns.filter(txn => txn.txnType === viewTxnType)
+      .map(txn => <ShowTxn
+        txn={txn}
+        deleteTxn={deleteTxn}
+        accountToName={accountToName}
+        refetchData={refetchData}
+        viewTxnType={viewTxnType}
+        />)
+      : [];
+
+    if (txnRows.length === 0) {
+      return <table className="txnTable"><tbody><tr><td>No txns</td></tr></tbody></table> }
+    let headerArray = [];
+    if (viewTxnType === "Expense") headerArray = expenseHeaders;
+    else if (viewTxnType === "Income") headerArray = incomeHeaders;
+    else if (viewTxnType === "Transfer") headerArray = transferHeaders;
+
+    let header = <tr>{headerArray.map(header => <td key={header}>{header}</td>)}</tr>
+
+      // leave commented unless you need it
+      let deleteButton = <Button onClick={() => massDelete(txns, deleteTxn)}> Delete All </Button>
+      deleteButton = "";
+
+      return <div>
+        {deleteButton}
+        <table className="txnTable"><tbody>{header}{
+          txnRows.length > 0
+            ? txnRows
+            : <tr key="notxn"><td>No txns</td></tr>
+        }</tbody></table>
+        {isLoadingMore && <div>Loading...</div>}
+      </div>
+  }
 }
 
 function massDelete(txns, deleteTxn) {

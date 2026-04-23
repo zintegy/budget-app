@@ -9,13 +9,13 @@
 
 ## Security
 
-- [ ] Move hardcoded MongoDB credentials in `backend/index.js` to `.env`
+- [x] Move hardcoded MongoDB credentials in `backend/index.js` to `.env`
 - [ ] Add authentication to API endpoints
-- [ ] Restrict CORS from `*` to specific origins
+- [x] Restrict CORS from `*` to specific origins
 
 ## Code Quality
 
-- [ ] Clean up root `package.json` — it has frontend and backend deps mixed in that don't belong there
+- [x] Clean up root `package.json` — it has frontend and backend deps mixed in that don't belong there
 - [ ] Migrate class components to functional components with hooks
 - [ ] Add `.catch()` error handling to API calls
 - [ ] Wrap transaction-related DB operations in a single Mongoose transaction (`backend/helpers/txn.helpers.js`)
@@ -33,8 +33,8 @@
 - [ ] Search/filter transactions by merchant
 - [ ] Export transactions to CSV
 - [ ] Multi-year spending comparison
-- [ ] Don't allow any edits to forms while submit http requests are still pending, eg for transaction creation
-- [ ] Be more clear when an http request has failed
+- [x] Don't allow any edits to forms while submit http requests are still pending, eg for transaction creation
+- [x] Be more clear when an http request has failed
 - [ ] paginate the TXN retrieval so the initial pageload doesn't take forever
 - [ ] provide an option to re-calculate the "current balance" on an account or on a category based on all transactions ever. if there is a mismatch, confirm with the user before overwriting the old value(s).
 - [ ] make the page generally look nicer and easier to use
