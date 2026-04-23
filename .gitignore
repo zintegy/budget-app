@@ -1,4 +1,5 @@
 backend/db/*
 node_modules
 *.sw*
-.env
+.env*
+.DS_store
