@@ -1,26 +1,27 @@
 import React from 'react';
-import RadioInput from './RadioInput';
-
+import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
 import AccountType from '../../utils/AccountType';
 
-/*
- * Selector for txn type.
- * ID can be used to modify the CSS.
- *
- * TODO: make it look less like radio buttons?
- */
-const AccountTypeSelector = ({name, id, value, onChange}) => {
-  return <RadioInput
-    onChange={onChange}
-    name={name}
-    id={id}
-    value={value}
-    options={Object.values(AccountType)}
-    />
-}
+const AccountTypeSelector = ({ name, value, onChange }) => {
+  const handleChange = (event, newValue) => {
+    if (newValue === null) return;
+    onChange({ target: { name, value: newValue } });
+  };
 
-
+  return (
+    <ToggleButtonGroup
+      value={value}
+      exclusive
+      onChange={handleChange}
+      size="small"
+    >
+      {Object.values(AccountType).map(type => (
+        <ToggleButton key={type} value={type}>
+          {type}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+  );
+};
 
 export default AccountTypeSelector;
-
-

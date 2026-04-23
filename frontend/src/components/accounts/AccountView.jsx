@@ -1,38 +1,35 @@
 
 import React from 'react';
-import {Button} from '@material-ui/core';
+import {
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography
+} from '@material-ui/core';
 
+const RenderAccounts = ({accounts}) => {
 
-function massDelete(accounts, deleteAccount) {
-  console.log(deleteAccount);
-  accounts.forEach(account => {console.log(account.accountName);deleteAccount(account._id)})
-}
+  if (!accounts || accounts.length === 0) {
+    return <Typography variant="body2" color="textSecondary">No accounts</Typography>
+  }
 
-const RenderAccounts = ({accounts, deleteAccount}) => {
-
-  let deleteButton = <Button onClick={() => massDelete(accounts,deleteAccount)}> Delete All Accounts</Button>
-  deleteButton = ""; // overrides deletebutton
-
-
-  const header=<tr>
-    <td>Name</td>
-    <td>Current amount</td>
-    <td>Last txn date</td>
-  </tr>
-
-  const rows = accounts.map(account => <tr>
-      <td>{account.accountName}</td>
-      <td>{account.currentAmount}</td>
-      <td>{account.lastTxnDate}</td>
-    </tr>);
-
-  return <table>
-    {deleteButton}
-    <tbody>
-      {header}
-      {rows}
-    </tbody>
-  </table>
+  return <TableContainer>
+    <Table size="small">
+      <TableHead>
+        <TableRow>
+          <TableCell>Name</TableCell>
+          <TableCell>Current Amount</TableCell>
+          <TableCell>Last Txn Date</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {accounts.map(account => (
+          <TableRow key={account._id} hover>
+            <TableCell>{account.accountName}</TableCell>
+            <TableCell>{account.currentAmount}</TableCell>
+            <TableCell>{account.lastTxnDate}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
 }
 
 export default RenderAccounts;

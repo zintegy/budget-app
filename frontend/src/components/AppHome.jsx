@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, createRef} from 'react';
 
 import http from "./http-common";
 import TxnView from './txns/TxnView';
@@ -8,15 +8,15 @@ import NewAccount from './accounts/NewAccount';
 import NewCategory from './categories/NewCategory';
 import TxnTypeSelector from './common/TxnTypeSelector';
 import YearSelector from './common/YearSelector';
-
 import RenderAccounts from './accounts/AccountView';
 
-import {Button, Container, AccordionSummary, Accordion, AccordionDetails} from '@material-ui/core';
-import {Alert} from '@material-ui/lab';
+import {
+  Button, Typography, Box, Paper, AppBar, Toolbar,
+  Dialog, DialogTitle, DialogContent, Tab, Divider
+} from '@material-ui/core';
+import {Alert, TabContext, TabList, TabPanel} from '@material-ui/lab';
+import AddIcon from '@material-ui/icons/Add';
 
-/*
- * The home page of the app. Should render all other components.
- */
 class AppHome extends Component {
   state = {
     txns: [],
@@ -31,20 +31,17 @@ class AppHome extends Component {
     isLoadingMore: false,
     reconcileResult: null,
     isReconciling: false,
+    rightTab: "transactions",
+    showNewAccountDialog: false,
+    showNewCategoryDialog: false,
   }
 
-  /*
-   * Runs on initial load.
-   */
+  rightPanelRef = createRef();
+
   componentDidMount() {
     this.refetchData(this.state.viewTxnType)
   }
 
-  /*
-   * Helper method to retrieve all accounts in the db.
-   * Also constructs a map of IDs to account names, so we know
-   * which account ID has which name.
-   */
   getAccounts = () => {
     return http.get('/accountApi/account')
       .then(res => {
@@ -58,10 +55,6 @@ class AppHome extends Component {
       .catch(() => this.setState({ fetchError: "Failed to load accounts." }))
   }
 
-  /*
-   * Retrieves all txns in the db.
-   * May also modify which txn type is being shown, if an argument is passed.
-   */
   getTxns = (txnType) => {
     if (!txnType) {
       txnType = this.state.viewTxnType;
@@ -137,10 +130,6 @@ class AppHome extends Component {
       .catch(() => this.setState({ fetchError: "Failed to load categories." }))
   }
 
-  /*
-   * Deletes a txn by ID.
-   * TODO: Must re-calculate account amount (maybe on backend)
-   */
   deleteTxn = (id) => {
     console.log("Deleting " + id);
     return http.delete(`/txnApi/txn/${id}`)
@@ -195,9 +184,6 @@ class AppHome extends Component {
     return this.getAccounts()
   }
 
-  /*
-   * On-change handler for changing txn type shown.
-   */
   viewTxnOnChange = (e) => {
     let target = e.target;
     this.setState({
@@ -205,17 +191,11 @@ class AppHome extends Component {
     });
   }
 
-  /*
-   * Helper method to retrieving the name of an account from the ID.
-   */
   accountToName = (accountId) => {
     if (accountId === null) return "";
     return this.state.accountToName[accountId];
   }
 
-  /**
-   * helper method to change the current year.
-   */
   yearOnChange = (e) => {
     let target = e.target;
     this.setState({
@@ -236,150 +216,233 @@ class AppHome extends Component {
       isLoadingMore,
       reconcileResult,
       isReconciling,
+      rightTab,
+      showNewAccountDialog,
+      showNewCategoryDialog,
     } = this.state;
 
     const hasMismatches = reconcileResult &&
       (reconcileResult.accountDiffs.length > 0 || reconcileResult.categoryDiffs.length > 0);
 
-    return <div id="txnViewDiv">
-      {fetchError && <Alert severity="error" onClose={() => this.setState({ fetchError: "" })}>{fetchError}</Alert>}
+    return (
+      <div className="app-root">
+        {/* AppBar */}
+        <AppBar position="static" color="primary" elevation={1}>
+          <Toolbar>
+            <Typography variant="h6" style={{ flexGrow: 1 }}>
+              Budget Tracker
+            </Typography>
+            <Box display="flex" alignItems="center" style={{ color: '#fff' }}>
+              <Typography variant="body2" style={{ marginRight: 8 }}>Year:</Typography>
+              <YearSelector
+                name="yearSelector"
+                id="yearSelector"
+                onChange={this.yearOnChange}
+                value={year}
+                style={{ color: '#fff' }}
+              />
+            </Box>
+          </Toolbar>
+        </AppBar>
 
-      <Container className="analysisHome" maxWidth="false">
-        <YearSelector
-          name="yearSelector"
-          id="yearSelector"
-          onChange={this.yearOnChange}
-          value={year}
-        />
-        <Accordion>
-          <AccordionSummary>
-            Analysis
-          </AccordionSummary>
-          <AccordionDetails>
-            <AnalysisHome
-              expenseCategories={expenseCategories}
-              incomeCategories={incomeCategories}
-              year={year}
-            />
-          </AccordionDetails>
-        </Accordion>
-        <Accordion>
-          <AccordionSummary>
-            Accounts
-          </AccordionSummary>
-          <AccordionDetails>
-            <RenderAccounts
-              accounts={accounts}
-              deleteAccount={this.deleteAccount}
-            />
-          </AccordionDetails>
-        </Accordion>
-        <div>
-          <Button onClick={() => this.reconcile(false)} disabled={isReconciling}>
-            {isReconciling ? "Checking..." : "Reconcile"}
-          </Button>
-          {reconcileResult && !reconcileResult.applied && !hasMismatches && (
-            <Alert severity="success" onClose={() => this.setState({ reconcileResult: null })}>
-              All balances are correct.
-            </Alert>
-          )}
-          {reconcileResult && reconcileResult.applied && (
-            <Alert severity="success" onClose={() => this.setState({ reconcileResult: null })}>
-              Fixes applied successfully.
-            </Alert>
-          )}
-          {hasMismatches && !reconcileResult.applied && <div>
-            <Alert severity="warning">
-              Mismatches found:
-              {reconcileResult.accountDiffs.map(d => (
-                <div key={d.id}>
-                  <strong>Account "{d.name}"</strong>: stored ${d.storedAmount}, expected ${d.expectedAmount} (off by ${d.diff})
-                  {Object.keys(d.monthDiffs).length > 0 && Object.entries(d.monthDiffs).map(([year, months]) =>
-                    Object.entries(months).map(([month, v]) => (
-                      <div key={`${d.id}-${year}-${month}`} style={{marginLeft: 16}}>
-                        {year}/{parseInt(month)+1}: stored ${v.stored}, expected ${v.expected} (off by ${v.diff})
-                      </div>
-                    ))
-                  )}
-                </div>
-              ))}
-              {reconcileResult.categoryDiffs.map(d => (
-                <div key={d.id}>
-                  Category "{d.name}": {Object.entries(d.monthDiffs).map(([year, months]) =>
-                    Object.entries(months).map(([month, v]) => (
-                      <span key={`${year}-${month}`}>
-                        {year}/{parseInt(month)+1}: stored ${v.stored}, expected ${v.expected} (off by ${v.diff}){' '}
-                      </span>
-                    ))
-                  )}
-                </div>
-              ))}
-            </Alert>
-            <Button onClick={() => this.reconcile(true)} disabled={isReconciling}>
-              Apply Fixes
-            </Button>
-          </div>}
+        {/* Error banner */}
+        {fetchError && (
+          <Alert severity="error" onClose={() => this.setState({ fetchError: "" })} style={{ borderRadius: 0 }}>
+            {fetchError}
+          </Alert>
+        )}
+
+        {/* Two-panel layout */}
+        <div className="layout-container">
+          {/* LEFT PANEL */}
+          <div className="left-panel">
+            {/* Add Transaction */}
+            <Paper elevation={1} style={{ padding: 16, marginBottom: 16 }}>
+              <Typography variant="subtitle1" gutterBottom style={{ fontWeight: 600 }}>
+                Add Transaction
+              </Typography>
+              <NewTxn
+                refetchData={this.refetchData}
+                insertTxn={this.insertTxn}
+                incomeCategories={incomeCategories}
+                expenseCategories={expenseCategories}
+                accounts={accounts}
+              />
+            </Paper>
+
+            {/* Accounts */}
+            <Paper elevation={1} style={{ padding: 16, marginBottom: 16 }}>
+              <Typography variant="subtitle1" gutterBottom style={{ fontWeight: 600 }}>
+                Accounts
+              </Typography>
+              <RenderAccounts
+                accounts={accounts}
+                deleteAccount={this.deleteAccount}
+              />
+            </Paper>
+
+            {/* Action Buttons */}
+            <Box display="flex" gap={1} mb={2} style={{ gap: 8 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => this.setState({ showNewAccountDialog: true })}
+              >
+                Account
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => this.setState({ showNewCategoryDialog: true })}
+              >
+                Category
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => this.reconcile(false)}
+                disabled={isReconciling}
+              >
+                {isReconciling ? "Checking..." : "Reconcile"}
+              </Button>
+            </Box>
+
+            {/* Reconcile Results */}
+            {reconcileResult && !reconcileResult.applied && !hasMismatches && (
+              <Alert severity="success" onClose={() => this.setState({ reconcileResult: null })} style={{ marginBottom: 16 }}>
+                All balances are correct.
+              </Alert>
+            )}
+            {reconcileResult && reconcileResult.applied && (
+              <Alert severity="success" onClose={() => this.setState({ reconcileResult: null })} style={{ marginBottom: 16 }}>
+                Fixes applied successfully.
+              </Alert>
+            )}
+            {hasMismatches && !reconcileResult.applied && <div style={{ marginBottom: 16 }}>
+              <Alert severity="warning">
+                Mismatches found:
+                {reconcileResult.accountDiffs.map(d => (
+                  <div key={d.id}>
+                    <strong>Account "{d.name}"</strong>: stored ${d.storedAmount}, expected ${d.expectedAmount} (off by ${d.diff})
+                    {Object.keys(d.monthDiffs).length > 0 && Object.entries(d.monthDiffs).map(([yr, months]) =>
+                      Object.entries(months).map(([month, v]) => (
+                        <div key={`${d.id}-${yr}-${month}`} style={{marginLeft: 16}}>
+                          {yr}/{parseInt(month)+1}: stored ${v.stored}, expected ${v.expected} (off by ${v.diff})
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ))}
+                {reconcileResult.categoryDiffs.map(d => (
+                  <div key={d.id}>
+                    Category "{d.name}": {Object.entries(d.monthDiffs).map(([yr, months]) =>
+                      Object.entries(months).map(([month, v]) => (
+                        <span key={`${yr}-${month}`}>
+                          {yr}/{parseInt(month)+1}: stored ${v.stored}, expected ${v.expected} (off by ${v.diff}){' '}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                ))}
+              </Alert>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => this.reconcile(true)}
+                disabled={isReconciling}
+                style={{ marginTop: 8 }}
+              >
+                Apply Fixes
+              </Button>
+            </div>}
+          </div>
+
+          {/* RIGHT PANEL */}
+          <div className="right-panel" ref={this.rightPanelRef}>
+            <Paper elevation={1} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <TabContext value={rightTab}>
+                <TabList
+                  onChange={(e, v) => this.setState({ rightTab: v })}
+                  indicatorColor="primary"
+                  textColor="primary"
+                >
+                  <Tab label="Transactions" value="transactions" />
+                  <Tab label="Analysis" value="analysis" />
+                </TabList>
+                <Divider />
+                <TabPanel value="transactions" style={{ padding: 16, flex: 1, overflow: 'auto' }}>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <TxnTypeSelector
+                      name="selectTxnViewButtons"
+                      id="selectTxnViewButtons"
+                      onChange={this.viewTxnOnChange}
+                      value={viewTxnType}
+                    />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={this.loadAllTxns}
+                      disabled={isLoadingMore}
+                      style={{ marginLeft: 16 }}
+                    >
+                      {isLoadingMore ? "Loading..." : "Load All"}
+                    </Button>
+                  </Box>
+                  <TxnView
+                    txns={txns}
+                    deleteTxn={this.deleteTxn}
+                    viewTxnType={viewTxnType}
+                    accountToName={this.accountToName}
+                    refetchData={this.refetchData}
+                    loadMoreTxns={this.loadMoreTxns}
+                    hasMore={txns.length < totalTxnCount}
+                    isLoadingMore={isLoadingMore}
+                    scrollContainer={this.rightPanelRef}
+                  />
+                </TabPanel>
+                <TabPanel value="analysis" style={{ padding: 16, flex: 1, overflow: 'auto' }}>
+                  <AnalysisHome
+                    expenseCategories={expenseCategories}
+                    incomeCategories={incomeCategories}
+                    year={year}
+                  />
+                </TabPanel>
+              </TabContext>
+            </Paper>
+          </div>
         </div>
-      </Container>
-      <Container className="newEntityForms" maxWidth="lg">
-        <Accordion>
-          <AccordionSummary>
-            New Txn
-          </AccordionSummary>
-          <AccordionDetails>
-            <NewTxn
-              refetchData={this.refetchData}
-              insertTxn={this.insertTxn}
-              incomeCategories={incomeCategories}
-              expenseCategories={expenseCategories}
-              accounts={accounts}
-            />
-          </AccordionDetails>
-        </Accordion>
-        <Accordion>
-          <AccordionSummary>
-            New Account
-          </AccordionSummary>
-          <AccordionDetails>
-            <NewAccount
-              getAccounts={this.getAccounts}
-            />
-          </AccordionDetails>
-        </Accordion>
-        <Accordion>
-          <AccordionSummary>
-            New Category
-          </AccordionSummary>
-          <AccordionDetails>
-            <NewCategory
-              getCategories={this.getCategories}
-            />
-          </AccordionDetails>
-        </Accordion>
-      </Container>
-      <TxnTypeSelector
-        name="selectTxnViewButtons"
-        id="selectTxnViewButtons"
-        onChange={this.viewTxnOnChange}
-        value={viewTxnType}
-      />
-      <Button onClick={this.loadAllTxns} disabled={isLoadingMore}>
-        {isLoadingMore ? "Loading..." : "Load All"}
-      </Button>
-      <TxnView
-        txns={txns}
-        deleteTxn={this.deleteTxn}
-        viewTxnType={viewTxnType}
-        accountToName={this.accountToName}
-        refetchData={this.refetchData}
-        loadMoreTxns={this.loadMoreTxns}
-        hasMore={txns.length < totalTxnCount}
-        isLoadingMore={isLoadingMore}
-      />
-      {/*TODO: move TxnTypeSelector into TxnView instead*/}
-    </div>
+
+        {/* New Account Dialog */}
+        <Dialog
+          open={showNewAccountDialog}
+          onClose={() => this.setState({ showNewAccountDialog: false })}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>New Account</DialogTitle>
+          <DialogContent>
+            <NewAccount getAccounts={this.getAccounts} />
+          </DialogContent>
+        </Dialog>
+
+        {/* New Category Dialog */}
+        <Dialog
+          open={showNewCategoryDialog}
+          onClose={() => this.setState({ showNewCategoryDialog: false })}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>New Category</DialogTitle>
+          <DialogContent>
+            <NewCategory getCategories={this.getCategories} />
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   }
 }
 
 export default AppHome;
-

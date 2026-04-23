@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import http from "../http-common";
 import TextInput from '../common/TextInput';
-import {Button, Container} from '@material-ui/core';
+import {Button, Grid, Box} from '@material-ui/core';
 import {Alert} from '@material-ui/lab';
 import TxnType from '../../utils/TxnType';
 import TxnTypeSelector from '../common/TxnTypeSelector';
@@ -28,9 +28,6 @@ class NewTxn extends Component {
     errorMessage: ""
   }
 
-  /*
-   * Runs on initial load.
-   */
   componentDidMount = () => {
     let today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -39,9 +36,6 @@ class NewTxn extends Component {
     })
   }
 
-  /*
-   * Submits form contents to the backend.
-   */
   addTxn = () => {
     let txn = Object.assign({}, this.state)
     this.setState({
@@ -51,7 +45,6 @@ class NewTxn extends Component {
       isSubmitting: true
     });
 
-    // always use UTC midnight
     const UTCDate = Date.UTC(
       txn.txnDate.getFullYear(),
       txn.txnDate.getMonth(),
@@ -118,39 +111,47 @@ class NewTxn extends Component {
       successMessage,
       errorMessage,
     } = this.state;
-    return (<Container maxWidth="sm">
-      <div id="newTxnForm">
-        <TxnTypeSelector
-          name="txnType"
-          id="txnType"
-          value={txnType}
-          onChange={this.inputOnChange}
-        />
-        <DateInput
-          selectedDate={txnDate}
-          onChange={this.dateOnChange}
-        />
-        <TextInput
-          onChange={this.inputOnChange}
-          value={amount}
-          name="amount"
-          label="Amount"
-          error={errors["amount"]}
+    return (
+      <div>
+        <Box mb={1.5}>
+          <TxnTypeSelector
+            name="txnType"
+            id="txnType"
+            value={txnType}
+            onChange={this.inputOnChange}
           />
+        </Box>
+        <Grid container spacing={1}>
+          <Grid item xs={6}>
+            <DateInput
+              selectedDate={txnDate}
+              onChange={this.dateOnChange}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextInput
+              onChange={this.inputOnChange}
+              value={amount}
+              name="amount"
+              label="Amount"
+              error={errors["amount"]}
+            />
+          </Grid>
+        </Grid>
         {txnType === TxnType.EXPENSE && <TextInput
           onChange={this.inputOnChange}
           value={merchant}
           name="merchant"
           label="Merchant"
           error={errors["merchant"]}
-          />}
+        />}
         <TextInput
           onChange={this.inputOnChange}
           value={description}
           name="description"
           label="Description"
           error={errors["description"]}
-          />
+        />
         {txnType === TxnType.INCOME && <CategorySelector
           onChange={categoryOnChange(this)}
           selected={incomeCategory}
@@ -158,7 +159,7 @@ class NewTxn extends Component {
           label="Income Category"
           error={errors["incomeCategory"]}
           categories={this.props.incomeCategories}
-          />}
+        />}
         {txnType !== TxnType.TRANSFER && <CategorySelector
           onChange={categoryOnChange(this)}
           selected={expenseCategory}
@@ -166,7 +167,7 @@ class NewTxn extends Component {
           label="Expense Category"
           error={errors["expenseCategory"]}
           categories={this.props.expenseCategories}
-          />}
+        />}
         {txnType !== TxnType.INCOME && <AccountSelector
           onChange={selectorOnChange(this)}
           onInputChange={this.inputOnChange}
@@ -189,16 +190,19 @@ class NewTxn extends Component {
           error={errors["destinationAccount"]}
           accounts={this.props.accounts}
         />}
-        <div>
-          <Button
-            className="newTxnSubmit"
-            onClick={this.addTxn}
-            disabled={this.state.isSubmitting}
-          >{this.state.isSubmitting ? "Submitting..." : "Add Txn"}</Button>
-          {successMessage && <Alert severity="success">{successMessage}</Alert>}
-          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-        </div>
-      </div></Container>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={this.addTxn}
+          disabled={this.state.isSubmitting}
+          style={{ marginTop: 8 }}
+        >
+          {this.state.isSubmitting ? "Submitting..." : "Add Transaction"}
+        </Button>
+        {successMessage && <Alert severity="success" style={{ marginTop: 8 }}>{successMessage}</Alert>}
+        {errorMessage && <Alert severity="error" style={{ marginTop: 8 }}>{errorMessage}</Alert>}
+      </div>
     );
   }
 }

@@ -1,26 +1,27 @@
 import React from 'react';
-import RadioInput from './RadioInput';
-
+import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
 import TxnType from '../../utils/TxnType';
 
-/*
- * Selector for txn type.
- * ID can be used to modify the CSS.
- *
- * TODO: make it look less like radio buttons?
- */
-const TxnTypeSelector = ({name, id, value, onChange}) => {
-  return <RadioInput
-      onChange={onChange}
-      name={name}
-      id={id}
+const TxnTypeSelector = ({ name, value, onChange }) => {
+  const handleChange = (event, newValue) => {
+    if (newValue === null) return;
+    onChange({ target: { name, value: newValue } });
+  };
+
+  return (
+    <ToggleButtonGroup
       value={value}
-      options={Object.values(TxnType)}
-    />
-}
-
-
+      exclusive
+      onChange={handleChange}
+      size="small"
+    >
+      {Object.values(TxnType).map(type => (
+        <ToggleButton key={type} value={type}>
+          {type}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+  );
+};
 
 export default TxnTypeSelector;
-
-

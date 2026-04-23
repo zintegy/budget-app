@@ -3,57 +3,57 @@
 @import "Selector";
 @import "Analysis";
 
-.App {
-/*
-  background-color: #121112;
-  text-align: center;
-  color: #dddddd;
-  */
-}
-
 html {
   min-height: 100%;
 }
 
-#txnViewDiv {
-
-
-
-
-}
-
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+.app-root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.layout-container {
+  display: flex;
+  flex: 1;
+  padding: 16px;
+  gap: 16px;
+  min-height: 0;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.left-panel {
+  width: 380px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 0;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+/* Responsive: stack vertically below 900px */
+@media (max-width: 900px) {
+  .layout-container {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+
+  .left-panel {
+    width: 100%;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .right-panel {
+    max-height: none;
+    overflow-y: visible;
   }
 }

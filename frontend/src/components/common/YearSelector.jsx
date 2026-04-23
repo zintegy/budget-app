@@ -1,16 +1,13 @@
 import React from 'react';
 import {Select, MenuItem} from '@material-ui/core';
 
-/*
- * Selector for year.
- * ID can be used to modify the CSS.
- */
-const YearSelector = ({name, id, value, onChange}) => {
+const YearSelector = ({name, id, value, onChange, style}) => {
   return <Select
       onChange={onChange}
       name={name}
       id={id}
       value={value}
+      style={style}
     >
       <MenuItem value={2021}>2021</MenuItem>
       <MenuItem value={2022}>2022</MenuItem>
@@ -24,8 +21,4 @@ const YearSelector = ({name, id, value, onChange}) => {
     </Select>
 }
 
-
-
 export default YearSelector;
-
-

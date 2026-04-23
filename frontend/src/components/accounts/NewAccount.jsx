@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
 import http from "../http-common";
 import TextInput from '../common/TextInput';
-import {Button, Container} from '@material-ui/core';
+import {Button, Box} from '@material-ui/core';
 import {Alert} from '@material-ui/lab';
-import AccountType from '../../utils/AccountType';
 import AccountTypeSelector from '../common/AccountTypeSelector';
-import RadioInput from '../common/RadioInput';
+import ToggleSelector from '../common/ToggleSelector';
+import AccountType from '../../utils/AccountType';
 
 class NewAccount extends Component {
 
@@ -18,15 +18,6 @@ class NewAccount extends Component {
     errorMessage: ""
   }
 
-  /*
-   * Runs on initial load.
-   */
-  componentDidMount = () => {
-  }
-
-  /*
-   * Submits form contents to the backend.
-   */
   addAccount = () => {
     let account = Object.assign({}, this.state)
 
@@ -38,7 +29,6 @@ class NewAccount extends Component {
     });
 
     account.isLiquid = account.isLiquid === "Yes";
-
 
     http.post('/accountApi/account', account)
       .then(res => {
@@ -56,7 +46,6 @@ class NewAccount extends Component {
       })
       .catch(() => this.setState({ errorMessage: "Request failed. Please try again." }))
       .finally(() => this.setState({ isSubmitting: false }));
-
   }
 
   inputOnChange = (e) => {
@@ -78,48 +67,50 @@ class NewAccount extends Component {
       errorMessage
     } = this.state;
 
-    return (<Container maxWidth="sm">
-      <div id="newTxnForm">
-        <AccountTypeSelector
-          onChange={this.inputOnChange}
-          name="accountType"
-          id="accountType"
-          value={accountType}
-        />
+    return (
+      <div>
+        <Box mb={1.5}>
+          <AccountTypeSelector
+            onChange={this.inputOnChange}
+            name="accountType"
+            value={accountType}
+          />
+        </Box>
         <TextInput
           onChange={this.inputOnChange}
           value={accountName}
           name="accountName"
           label="Account Name"
           error={errors["accountName"]}
-          />
+        />
         <TextInput
           onChange={this.inputOnChange}
           value={startingAmount}
           name="startingAmount"
           label="Starting Amount"
           error={errors["startingAmount"]}
-          />
-        <RadioInput
+        />
+        <ToggleSelector
           onChange={this.inputOnChange}
           value={isLiquid}
           options={["Yes", "No"]}
           error={errors["isLiquid"]}
           name="isLiquid"
           label="Is liquid?"
-          />
-        <div>
-          <Button
-            className="newAccountSubmit"
-            onClick={this.addAccount}
-            disabled={this.state.isSubmitting}
-          >
-            {this.state.isSubmitting ? "Submitting..." : "Add Account"}
-          </Button>
-          {successMessage && <Alert severity="success">{successMessage}</Alert>}
-          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-        </div>
-      </div></Container>
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={this.addAccount}
+          disabled={this.state.isSubmitting}
+          style={{ marginTop: 8 }}
+        >
+          {this.state.isSubmitting ? "Submitting..." : "Add Account"}
+        </Button>
+        {successMessage && <Alert severity="success" style={{ marginTop: 8 }}>{successMessage}</Alert>}
+        {errorMessage && <Alert severity="error" style={{ marginTop: 8 }}>{errorMessage}</Alert>}
+      </div>
     );
   }
 }

@@ -1,73 +1,73 @@
 import React, {Component} from 'react';
-import {Modal} from 'react-overlays';
-import {Button, Backdrop} from '@material-ui/core';
+import {
+  Button, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Typography, IconButton, Box, CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions
+} from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 const expenseHeaders = ["Date", "Amount", "Merchant", "Description", "Category", "Account"]
 const incomeHeaders = ["Date", "Amount", "Description", "Income Category", "Expense Category", "Account"]
 const transferHeaders = ["Date", "Amount", "Description", "Source Account", "Destination Account"]
 
-/*
- * Renders a single transaction, with the ability to delete by clicking on it.
- */
-
 class ShowTxn extends Component {
 
-  // prop types: txn, accountToName, deleteTxn
-  //
-  toggleShowPopover = (show) => {
-    this.setState({showDeletePopover: show})
-    console.log("Set to " + show)
-  }
-
   state = {
-    showDeletePopover: false,
-  }
-
-  renderBackdrop = () => {
-    let {showDeletePopover} = this.state;
-    return <Backdrop open={showDeletePopover} onClick={() => this.toggleShowPopover(false)} id="deletePopoverBackdrop"/>
+    showDeleteDialog: false,
   }
 
   render() {
     let {txn, accountToName, deleteTxn, refetchData, viewTxnType} = this.props;
-    let {showDeletePopover} = this.state;
+    let {showDeleteDialog} = this.state;
     let isExpense = txn.txnType === "Expense";
     let isIncome = txn.txnType === "Income";
     let isTransfer = txn.txnType === "Transfer";
     let date = txn.txnDate.substring(0, txn.txnDate.length - 1)
 
-    return <tr key={txn._id}>
-      <td>{new Date(date).toDateString()}</td>
-      <td>${txn.amount}</td>
-      {isExpense ? <td>{txn.merchant}</td> : null}
-      <td>{txn.description}</td>
-      {isIncome ? <td>{txn.incomeCategory}</td> : null}
-      {!isTransfer ? <td>{txn.expenseCategory}</td> : null}
-      {!isIncome ? <td>{accountToName(txn.sourceAccount)}</td> : null}
-      {!isExpense ? <td>{accountToName(txn.destinationAccount)}</td> : null}
-      <div onClick={() => this.toggleShowPopover(true)}>X</div>
-      <Modal
-        show={showDeletePopover}
-        onHide={() => this.toggleShowPopover(false)}
-        renderBackdrop={this.renderBackdrop}
-        id="deleteTxnPopover"
-        onkeypress={() => console.log("Key pressed")}
+    return <TableRow key={txn._id} hover>
+      <TableCell>{new Date(date).toDateString()}</TableCell>
+      <TableCell>${txn.amount}</TableCell>
+      {isExpense ? <TableCell>{txn.merchant}</TableCell> : null}
+      <TableCell>{txn.description}</TableCell>
+      {isIncome ? <TableCell>{txn.incomeCategory}</TableCell> : null}
+      {!isTransfer ? <TableCell>{txn.expenseCategory}</TableCell> : null}
+      {!isIncome ? <TableCell>{accountToName(txn.sourceAccount)}</TableCell> : null}
+      {!isExpense ? <TableCell>{accountToName(txn.destinationAccount)}</TableCell> : null}
+      <TableCell padding="none" style={{ width: 48 }}>
+        <IconButton size="small" onClick={() => this.setState({ showDeleteDialog: true })}>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </TableCell>
+      <Dialog
+        open={showDeleteDialog}
+        onClose={() => this.setState({ showDeleteDialog: false })}
       >
-        <div>Delete this txn?
-          <div>
-            <Button onClick={() => this.toggleShowPopover(false)}>No</Button>
-            <Button onClick={() => {
-              this.toggleShowPopover(false);
+        <DialogTitle>Delete Transaction?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {new Date(date).toDateString()} &mdash; ${txn.amount}
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            {txn.description}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => this.setState({ showDeleteDialog: false })}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => {
+              this.setState({ showDeleteDialog: false });
               deleteTxn(txn._id).then(() => refetchData(viewTxnType))
             }}
-            >Yes</Button>
-          </div>
-          {new Date(date).toDateString()}<br/>
-          ${txn.amount}<br/>
-          {txn.description}
-        </div>
-      </Modal>
-    </tr>;
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </TableRow>;
   }
 }
 
@@ -78,19 +78,46 @@ class ShowTxn extends Component {
 class TxnView extends Component {
 
   componentDidMount() {
-    window.addEventListener('scroll', this.handleScroll);
+    this.attachScrollListener();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.scrollContainer !== this.props.scrollContainer) {
+      this.detachScrollListener(prevProps.scrollContainer);
+      this.attachScrollListener();
+    }
   }
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.handleScroll);
+    this.detachScrollListener(this.props.scrollContainer);
+  }
+
+  attachScrollListener() {
+    const el = this.getScrollElement();
+    if (el) el.addEventListener('scroll', this.handleScroll);
+  }
+
+  detachScrollListener(container) {
+    const el = container ? container.current : window;
+    if (el) el.removeEventListener('scroll', this.handleScroll);
+  }
+
+  getScrollElement() {
+    const { scrollContainer } = this.props;
+    return scrollContainer && scrollContainer.current ? scrollContainer.current : window;
   }
 
   handleScroll = () => {
     const { hasMore, isLoadingMore, loadMoreTxns } = this.props;
     if (!hasMore || isLoadingMore) return;
 
-    const scrolledNearBottom =
-      window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+    const el = this.getScrollElement();
+    let scrolledNearBottom;
+    if (el === window) {
+      scrolledNearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+    } else {
+      scrolledNearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 300;
+    }
 
     if (scrolledNearBottom) {
       loadMoreTxns();
@@ -103,6 +130,7 @@ class TxnView extends Component {
     let txnRows = (txns && txns.length > 0)
       ? txns.filter(txn => txn.txnType === viewTxnType)
       .map(txn => <ShowTxn
+        key={txn._id}
         txn={txn}
         deleteTxn={deleteTxn}
         accountToName={accountToName}
@@ -112,32 +140,35 @@ class TxnView extends Component {
       : [];
 
     if (txnRows.length === 0) {
-      return <table className="txnTable"><tbody><tr><td>No txns</td></tr></tbody></table> }
+      return <Typography variant="body2" color="textSecondary" style={{ padding: 16 }}>No transactions</Typography>
+    }
+
     let headerArray = [];
     if (viewTxnType === "Expense") headerArray = expenseHeaders;
     else if (viewTxnType === "Income") headerArray = incomeHeaders;
     else if (viewTxnType === "Transfer") headerArray = transferHeaders;
 
-    let header = <tr>{headerArray.map(header => <td key={header}>{header}</td>)}</tr>
-
-      // leave commented unless you need it
-      let deleteButton = <Button onClick={() => massDelete(txns, deleteTxn)}> Delete All </Button>
-      deleteButton = "";
-
-      return <div>
-        {deleteButton}
-        <table className="txnTable"><tbody>{header}{
-          txnRows.length > 0
-            ? txnRows
-            : <tr key="notxn"><td>No txns</td></tr>
-        }</tbody></table>
-        {isLoadingMore && <div>Loading...</div>}
-      </div>
+    return <div>
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              {headerArray.map(header => <TableCell key={header}>{header}</TableCell>)}
+              <TableCell padding="none" style={{ width: 48 }} />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {txnRows}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {isLoadingMore && (
+        <Box display="flex" justifyContent="center" py={2}>
+          <CircularProgress size={24} />
+        </Box>
+      )}
+    </div>
   }
-}
-
-function massDelete(txns, deleteTxn) {
-  txns.forEach(txn => console.log(deleteTxn(txn._id)))
 }
 
 export default TxnView

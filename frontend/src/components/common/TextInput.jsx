@@ -1,28 +1,21 @@
 import React from 'react';
-import { Input } from '@material-ui/core';
+import { TextField } from '@material-ui/core';
 
-/*
- * Renders a standard TextField.
- */
-const TextInput = ({
-  onChange, 
-  value, 
-  error,
-  name,
-  label
-}) => {
-  return <div className="inputDiv">
-    <label>{label}</label>
-      <Input
-      type="text"
-      onChange={onChange}
-      value={value}
+const TextInput = ({ onChange, value, error, name, label }) => {
+  return (
+    <TextField
+      variant="outlined"
+      size="small"
+      fullWidth
+      label={label}
       name={name}
-      fullWidth={true}
+      value={value || ''}
+      onChange={onChange}
+      error={!!error}
+      helperText={error || ''}
+      style={{ marginBottom: 12 }}
     />
-    <div className="inputError">
-      {error}
-    </div>
-  </div>
-}
+  );
+};
+
 export default TextInput;
