@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import http from "../http-common";
 import TextInput from '../common/TextInput';
 import {Button, Container} from '@material-ui/core';
+import {Alert} from '@material-ui/lab';
 import TxnType from '../../utils/TxnType';
 import TxnTypeSelector from '../common/TxnTypeSelector';
 import CategorySelector, {categoryOnChange} from '../common/CategorySelector';
@@ -23,7 +24,8 @@ class NewTxn extends Component {
     successMessage: "",
     incomeCategory: null,
     expenseCategory: null,
-    isSubmitting: false
+    isSubmitting: false,
+    errorMessage: ""
   }
 
   /*
@@ -45,6 +47,7 @@ class NewTxn extends Component {
     this.setState({
       errors: {},
       successMessage: "",
+      errorMessage: "",
       isSubmitting: true
     });
 
@@ -77,7 +80,7 @@ class NewTxn extends Component {
             this, txn.destinationAccount, "destinationAccount", this.props.accounts);
         });
       })
-      .catch(err => console.log(err))
+      .catch(() => this.setState({ errorMessage: "Request failed. Please try again." }))
       .finally(() => this.setState({ isSubmitting: false }));
 
   }
@@ -112,6 +115,7 @@ class NewTxn extends Component {
       destinationAccountInput,
       expenseCategory,
       successMessage,
+      errorMessage,
     } = this.state;
     return (<Container maxWidth="sm">
       <div id="newTxnForm">
@@ -190,7 +194,8 @@ class NewTxn extends Component {
             onClick={this.addTxn}
             disabled={this.state.isSubmitting}
           >{this.state.isSubmitting ? "Submitting..." : "Add Txn"}</Button>
-          {successMessage}
+          {successMessage && <Alert severity="success">{successMessage}</Alert>}
+          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         </div>
       </div></Container>
     );

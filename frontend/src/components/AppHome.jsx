@@ -12,6 +12,7 @@ import YearSelector from './common/YearSelector';
 import RenderAccounts from './accounts/AccountView';
 
 import {Container, AccordionSummary, Accordion, AccordionDetails} from '@material-ui/core';
+import {Alert} from '@material-ui/lab';
 
 /*
  * The home page of the app. Should render all other components.
@@ -25,6 +26,7 @@ class AppHome extends Component {
     incomeCategories: [],
     expenseCategories: [],
     year: new Date().getFullYear(),
+    fetchError: "",
   }
 
   /*
@@ -49,7 +51,7 @@ class AppHome extends Component {
           this.setState({accounts: res.data, accountToName})
         }
       })
-      .catch(err => console.log(err))
+      .catch(() => this.setState({ fetchError: "Failed to load accounts." }))
   }
 
   /*
@@ -69,7 +71,7 @@ class AppHome extends Component {
           })
         }
       })
-      .catch(err => console.log(err))
+      .catch(() => this.setState({ fetchError: "Failed to load transactions." }))
   }
 
   getCategories = () => {
@@ -89,7 +91,7 @@ class AppHome extends Component {
           })
         }
       })
-      .catch(err => console.log(err))
+      .catch(() => this.setState({ fetchError: "Failed to load categories." }))
   }
 
   /*
@@ -99,13 +101,13 @@ class AppHome extends Component {
   deleteTxn = (id) => {
     console.log("Deleting " + id);
     return http.delete(`/txnApi/txn/${id}`)
-      .catch(err => console.log(err))
+      .catch(() => this.setState({ fetchError: "Failed to delete transaction." }))
   }
 
   deleteAccount = (id) => {
     console.log("Deleting account " + id);
     return http.delete(`/accountApi/account/${id}`)
-      .catch(err => console.log(err))
+      .catch(() => this.setState({ fetchError: "Failed to delete account." }))
   }
 
   refetchData = (txnType) => {
@@ -150,9 +152,11 @@ class AppHome extends Component {
       expenseCategories,
       incomeCategories,
       year,
+      fetchError,
     } = this.state;
 
     return <div id="txnViewDiv">
+      {fetchError && <Alert severity="error" onClose={() => this.setState({ fetchError: "" })}>{fetchError}</Alert>}
 
       <Container className="analysisHome" maxWidth="false">
         <YearSelector

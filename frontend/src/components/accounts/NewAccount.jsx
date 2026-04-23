@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import http from "../http-common";
 import TextInput from '../common/TextInput';
 import {Button, Container} from '@material-ui/core';
+import {Alert} from '@material-ui/lab';
 import AccountType from '../../utils/AccountType';
 import AccountTypeSelector from '../common/AccountTypeSelector';
 import RadioInput from '../common/RadioInput';
@@ -13,7 +14,8 @@ class NewAccount extends Component {
     errors: {},
     isLiquid: "Yes",
     successMessage: "",
-    isSubmitting: false
+    isSubmitting: false,
+    errorMessage: ""
   }
 
   /*
@@ -31,6 +33,7 @@ class NewAccount extends Component {
     this.setState({
       errors: {},
       successMessage: "",
+      errorMessage: "",
       isSubmitting: true
     });
 
@@ -51,7 +54,7 @@ class NewAccount extends Component {
         }
         this.props.getAccounts();
       })
-      .catch(err => console.log(err))
+      .catch(() => this.setState({ errorMessage: "Request failed. Please try again." }))
       .finally(() => this.setState({ isSubmitting: false }));
 
   }
@@ -71,7 +74,8 @@ class NewAccount extends Component {
       startingAmount,
       isLiquid,
       errors,
-      successMessage
+      successMessage,
+      errorMessage
     } = this.state;
 
     return (<Container maxWidth="sm">
@@ -112,7 +116,8 @@ class NewAccount extends Component {
           >
             {this.state.isSubmitting ? "Submitting..." : "Add Account"}
           </Button>
-          {successMessage}
+          {successMessage && <Alert severity="success">{successMessage}</Alert>}
+          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
         </div>
       </div></Container>
     );
