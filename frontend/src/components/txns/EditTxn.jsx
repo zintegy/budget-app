@@ -1,50 +1,52 @@
 import React, {Component} from 'react';
 import http from "../http-common";
 import TextInput from '../common/TextInput';
-import {Button, Container} from '@material-ui/core';
+import {Button, Grid, Box, Chip} from '@material-ui/core';
 import {Alert} from '@material-ui/lab';
 import TxnType from '../../utils/TxnType';
-import TxnTypeSelector from '../common/TxnTypeSelector';
 import CategorySelector, {categoryOnChange} from '../common/CategorySelector';
-import AccountSelector, { selectorOnChange, updateSelectorInput } from '../common/AccountSelector';
+import AccountSelector, { selectorOnChange } from '../common/AccountSelector';
 import DateInput from '../common/DateInput';
 
 class EditTxn extends Component {
 
-  state = {
-    txnType: this.props.txnType || TxnType.EXPENSE,
-    amount : this.props.amount || "",
-    errors: {},
-    description: this.props.description || "",
-    merchant: this.props.merchant || "",
-    txnDate: this.props.txnDate || "",
-    sourceAccount: this.props.sourceAccount || null,
-    sourceAccountInput: this.props.sourceAccount || "",
-    destinationAccount: this.props.destinationAccount || null,
-    destinationAccountInput: this.props.destinationAccount || "",
-    successMessage: "",
-    incomeCategory: this.props.incomeCategory || null,
-    expenseCategory: this.props.expenseCategory || null,
-    isSubmitting: false,
-    errorMessage: ""
+  constructor(props) {
+    super(props);
+    const { txn, accounts } = props;
+
+    // Parse date from txn (strip trailing Z for UTC midnight)
+    const dateStr = txn.txnDate.substring(0, txn.txnDate.length - 1);
+    const txnDate = new Date(dateStr);
+
+    // Build account input display strings
+    const findAccountLabel = (accountId) => {
+      if (!accountId) return "";
+      const acct = accounts.find(a => a._id === accountId);
+      return acct ? acct.accountName + " ($" + acct.currentAmount + ")" : "";
+    };
+
+    this.state = {
+      amount: txn.amount.toString(),
+      errors: {},
+      description: txn.description || "",
+      merchant: txn.merchant || "",
+      txnDate: txnDate,
+      sourceAccount: txn.sourceAccount || null,
+      sourceAccountInput: findAccountLabel(txn.sourceAccount),
+      destinationAccount: txn.destinationAccount || null,
+      destinationAccountInput: findAccountLabel(txn.destinationAccount),
+      incomeCategory: txn.incomeCategory || null,
+      expenseCategory: txn.expenseCategory || null,
+      isSubmitting: false,
+      successMessage: "",
+      errorMessage: ""
+    };
   }
 
-  /*
-   * Runs on initial load.
-   */
-  componentDidMount = () => {
-    let today = new Date();
-    today.setHours(0, 0, 0, 0);
-    this.setState({
-      "txnDate": today
-    })
-  }
+  saveTxn = () => {
+    const { txn, onSuccess, refetchData } = this.props;
+    const state = this.state;
 
-  /*
-   * Submits form contents to the backend.
-   */
-  addTxn = () => {
-    let txn = Object.assign({}, this.state)
     this.setState({
       errors: {},
       successMessage: "",
@@ -52,132 +54,136 @@ class EditTxn extends Component {
       isSubmitting: true
     });
 
-    // always use UTC midnight
     const UTCDate = Date.UTC(
-      txn.txnDate.getFullYear(),
-      txn.txnDate.getMonth(),
-      txn.txnDate.getDate());
+      state.txnDate.getFullYear(),
+      state.txnDate.getMonth(),
+      state.txnDate.getDate());
 
-    txn.txnDate = UTCDate;
+    const body = {
+      amount: state.amount,
+      txnDate: UTCDate,
+      description: state.description,
+    };
 
-    http.post('/txnApi/txn', txn)
+    const txnType = txn.txnType;
+    if (txnType === TxnType.EXPENSE) {
+      body.merchant = state.merchant;
+      body.sourceAccount = state.sourceAccount;
+      body.expenseCategory = state.expenseCategory;
+    }
+    if (txnType === TxnType.INCOME) {
+      body.destinationAccount = state.destinationAccount;
+      body.expenseCategory = state.expenseCategory;
+      body.incomeCategory = state.incomeCategory;
+    }
+    if (txnType === TxnType.TRANSFER) {
+      body.sourceAccount = state.sourceAccount;
+      body.destinationAccount = state.destinationAccount;
+    }
+
+    http.put(`/txnApi/txn/${txn._id}`, body)
       .then(res => {
         if (res.data && res.data.errors) {
-          console.log(res.data.errors);
-          this.setState({
-            errors: res.data.errors
-          })
-
+          this.setState({ errors: res.data.errors });
+          return;
         }
-        if (res.data && !res.data.errors) {
-          this.setState({
-            successMessage: "Success!"
-          })
-          if (this.props.insertTxn) this.props.insertTxn(res.data);
+        if (res.data && res.data.error) {
+          this.setState({ errorMessage: res.data.error });
+          return;
         }
-        this.props.refetchData(txn.txnType, { skipTxns: true }).then(() => {
-          updateSelectorInput(
-            this, txn.sourceAccount, "sourceAccount", this.props.accounts);
-          updateSelectorInput(
-            this, txn.destinationAccount, "destinationAccount", this.props.accounts);
-        });
+        this.setState({ successMessage: "Saved!" });
+        refetchData(txnType);
+        if (onSuccess) onSuccess();
       })
       .catch(() => this.setState({ errorMessage: "Request failed. Please try again." }))
       .finally(() => this.setState({ isSubmitting: false }));
-
   }
 
   inputOnChange = (e) => {
     if (e == null) return;
     let target = e.target;
     this.setState({
-      [target.name] : target.value,
+      [target.name]: target.value,
       successMessage: ""
     });
   }
 
   dateOnChange = (e) => {
-    this.setState({
-      "txnDate" : e
-    });
+    this.setState({ txnDate: e });
   }
 
   render() {
-    let {
-      amount,
-      errors,
-      txnType,
-      merchant,
-      txnDate,
-      description,
-      incomeCategory,
-      destinationAccount,
-      sourceAccount,
-      sourceAccountInput,
-      destinationAccountInput,
-      expenseCategory,
-      successMessage,
-      errorMessage,
+    const { txn, accounts, incomeCategories, expenseCategories } = this.props;
+    const txnType = txn.txnType;
+    const {
+      amount, errors, merchant, txnDate, description,
+      incomeCategory, destinationAccount, sourceAccount,
+      sourceAccountInput, destinationAccountInput,
+      expenseCategory, successMessage, errorMessage,
     } = this.state;
-    return (<Container maxWidth="sm">
-      <div id="newTxnForm">
-        <TxnTypeSelector
-          name="txnType"
-          id="txnType"
-          value={txnType}
-          onChange={this.inputOnChange}
-        />
-        <DateInput
-          selectedDate={txnDate}
-          onChange={this.dateOnChange}
-        />
-        <TextInput
-          onChange={this.inputOnChange}
-          value={amount}
-          name="amount"
-          label="Amount"
-          error={errors["amount"]}
-          />
+
+    return (
+      <div>
+        <Box mb={2}>
+          <Chip label={txnType} color="primary" size="small" />
+        </Box>
+        <Grid container spacing={1}>
+          <Grid item xs={6}>
+            <DateInput
+              selectedDate={txnDate}
+              onChange={this.dateOnChange}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextInput
+              onChange={this.inputOnChange}
+              value={amount}
+              name="amount"
+              label="Amount"
+              error={errors["amount"]}
+            />
+          </Grid>
+        </Grid>
         {txnType === TxnType.EXPENSE && <TextInput
           onChange={this.inputOnChange}
           value={merchant}
           name="merchant"
           label="Merchant"
           error={errors["merchant"]}
-          />}
+        />}
         <TextInput
           onChange={this.inputOnChange}
           value={description}
           name="description"
           label="Description"
           error={errors["description"]}
-          />
+        />
         {txnType === TxnType.INCOME && <CategorySelector
           onChange={categoryOnChange(this)}
           selected={incomeCategory}
           name="incomeCategory"
           label="Income Category"
           error={errors["incomeCategory"]}
-          categories={this.props.incomeCategories}
-          />}
+          categories={incomeCategories}
+        />}
         {txnType !== TxnType.TRANSFER && <CategorySelector
           onChange={categoryOnChange(this)}
           selected={expenseCategory}
           name="expenseCategory"
           label="Expense Category"
           error={errors["expenseCategory"]}
-          categories={this.props.expenseCategories}
-          />}
+          categories={expenseCategories}
+        />}
         {txnType !== TxnType.INCOME && <AccountSelector
           onChange={selectorOnChange(this)}
           onInputChange={this.inputOnChange}
           inputValue={sourceAccountInput}
           value={sourceAccount}
           name="sourceAccount"
-          id="selectSourceAccount"
+          id="editSourceAccount"
           label="Source Account"
           error={errors["sourceAccount"]}
-          accounts={this.props.accounts}
+          accounts={accounts}
         />}
         {txnType !== TxnType.EXPENSE && <AccountSelector
           onChange={selectorOnChange(this)}
@@ -185,21 +191,24 @@ class EditTxn extends Component {
           inputValue={destinationAccountInput}
           value={destinationAccount}
           name="destinationAccount"
-          id="selectDestAccount"
+          id="editDestAccount"
           label="Destination Account"
           error={errors["destinationAccount"]}
-          accounts={this.props.accounts}
+          accounts={accounts}
         />}
-        <div>
-          <Button
-            className="newTxnSubmit"
-            onClick={this.addTxn}
-            disabled={this.state.isSubmitting}
-          >{this.state.isSubmitting ? "Submitting..." : "Add Txn"}</Button>
-          {successMessage && <Alert severity="success">{successMessage}</Alert>}
-          {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-        </div>
-      </div></Container>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={this.saveTxn}
+          disabled={this.state.isSubmitting}
+          style={{ marginTop: 8 }}
+        >
+          {this.state.isSubmitting ? "Saving..." : "Save Changes"}
+        </Button>
+        {successMessage && <Alert severity="success" style={{ marginTop: 8 }}>{successMessage}</Alert>}
+        {errorMessage && <Alert severity="error" style={{ marginTop: 8 }}>{errorMessage}</Alert>}
+      </div>
     );
   }
 }

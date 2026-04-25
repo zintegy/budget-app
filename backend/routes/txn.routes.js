@@ -11,7 +11,7 @@ router.route('/txn')
 
 router.route('/txn/:id')
   .delete(TxnHelper.deleteTxnAndUpdateAccount)
-  .put(TxnController.update);
+  .put(TxnHelper.updateTxn);
 
 module.exports = router;
 

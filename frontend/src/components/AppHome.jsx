@@ -179,6 +179,7 @@ class AppHome extends Component {
   }
 
   refetchData = (txnType, { skipTxns } = {}) => {
+    if (txnType) this.setState({ viewTxnType: txnType })
     if (!skipTxns) this.getTxns(txnType)
     this.getCategories()
     return this.getAccounts()
@@ -401,6 +402,9 @@ class AppHome extends Component {
                     hasMore={txns.length < totalTxnCount}
                     isLoadingMore={isLoadingMore}
                     scrollContainer={this.rightPanelRef}
+                    accounts={accounts}
+                    incomeCategories={incomeCategories}
+                    expenseCategories={expenseCategories}
                   />
                 </TabPanel>
                 <TabPanel value="analysis" style={{ padding: 16, flex: 1, overflow: 'auto' }}>

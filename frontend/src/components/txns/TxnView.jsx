@@ -5,6 +5,8 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
+import EditTxn from './EditTxn';
 
 const expenseHeaders = ["Date", "Amount", "Merchant", "Description", "Category", "Account"]
 const incomeHeaders = ["Date", "Amount", "Description", "Income Category", "Expense Category", "Account"]
@@ -14,11 +16,13 @@ class ShowTxn extends Component {
 
   state = {
     showDeleteDialog: false,
+    showEditDialog: false,
   }
 
   render() {
-    let {txn, accountToName, deleteTxn, refetchData, viewTxnType} = this.props;
-    let {showDeleteDialog} = this.state;
+    let {txn, accountToName, deleteTxn, refetchData, viewTxnType,
+         accounts, incomeCategories, expenseCategories} = this.props;
+    let {showDeleteDialog, showEditDialog} = this.state;
     let isExpense = txn.txnType === "Expense";
     let isIncome = txn.txnType === "Income";
     let isTransfer = txn.txnType === "Transfer";
@@ -33,11 +37,37 @@ class ShowTxn extends Component {
       {!isTransfer ? <TableCell>{txn.expenseCategory}</TableCell> : null}
       {!isIncome ? <TableCell>{accountToName(txn.sourceAccount)}</TableCell> : null}
       {!isExpense ? <TableCell>{accountToName(txn.destinationAccount)}</TableCell> : null}
-      <TableCell padding="none" style={{ width: 48 }}>
+      <TableCell padding="none" style={{ width: 80 }}>
+        <IconButton size="small" onClick={() => this.setState({ showEditDialog: true })}>
+          <EditIcon fontSize="small" />
+        </IconButton>
         <IconButton size="small" onClick={() => this.setState({ showDeleteDialog: true })}>
           <DeleteIcon fontSize="small" />
         </IconButton>
       </TableCell>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={showEditDialog}
+        onClose={() => this.setState({ showEditDialog: false })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit Transaction</DialogTitle>
+        <DialogContent>
+          <EditTxn
+            txn={txn}
+            accounts={accounts}
+            incomeCategories={incomeCategories}
+            expenseCategories={expenseCategories}
+            accountToName={accountToName}
+            refetchData={refetchData}
+            onSuccess={() => this.setState({ showEditDialog: false })}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
       <Dialog
         open={showDeleteDialog}
         onClose={() => this.setState({ showDeleteDialog: false })}
@@ -125,7 +155,8 @@ class TxnView extends Component {
   }
 
   render() {
-    let { txns, deleteTxn, viewTxnType, accountToName, refetchData, isLoadingMore } = this.props;
+    let { txns, deleteTxn, viewTxnType, accountToName, refetchData, isLoadingMore,
+          accounts, incomeCategories, expenseCategories } = this.props;
 
     let txnRows = (txns && txns.length > 0)
       ? txns.filter(txn => txn.txnType === viewTxnType)
@@ -136,6 +167,9 @@ class TxnView extends Component {
         accountToName={accountToName}
         refetchData={refetchData}
         viewTxnType={viewTxnType}
+        accounts={accounts}
+        incomeCategories={incomeCategories}
+        expenseCategories={expenseCategories}
         />)
       : [];
 
@@ -154,7 +188,7 @@ class TxnView extends Component {
           <TableHead>
             <TableRow>
               {headerArray.map(header => <TableCell key={header}>{header}</TableCell>)}
-              <TableCell padding="none" style={{ width: 48 }} />
+              <TableCell padding="none" style={{ width: 80 }} />
             </TableRow>
           </TableHead>
           <TableBody>

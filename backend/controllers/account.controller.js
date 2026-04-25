@@ -47,7 +47,7 @@ AccountController.addAmountToAccount = (id, amount, date) => {
   console.log(amount)
   console.log(date)
 
-  Account.find({"_id": id})
+  return Account.find({"_id": id})
     .then(data => {
       const sourceAccountEntity = data[0];
       const monthlyDelta = sourceAccountEntity.monthlyDelta;
@@ -71,14 +71,14 @@ AccountController.addAmountToAccount = (id, amount, date) => {
       let lastTxnDate = sourceAccountEntity.lastTxnDate;
       if (lastTxnDate < date) lastTxnDate = date;
 
-      Account.findByIdAndUpdate(
+      return Account.findByIdAndUpdate(
         id,
         {
           "currentAmount": rounder.currencyRound(currentAmount + amount),
           "monthlyDelta": monthlyDelta,
           "lastTxnDate": lastTxnDate
         }
-      ).then(); // for some reason i need this .then(), otherwise the account deosn't update
+      );
     })
 };
 

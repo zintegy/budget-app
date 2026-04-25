@@ -39,12 +39,8 @@ CategoryController.addAmountToCategory = (categoryName, amount, date) => {
   const year = date.getUTCFullYear().toString();
 
   console.log("Adding " + amount + " to " + categoryName);
-  Category.find({"categoryName": categoryName})
+  return Category.find({"categoryName": categoryName})
     .then(data => {
-      console.log(date)
-      console.log(month)
-      console.log(year)
-      console.log(date.getDate())
       const categoryEntity = data[0];
       const monthlySpend = categoryEntity.monthlySpend;
       // if this is the first transaction in this year, create the new monthly map
@@ -62,10 +58,10 @@ CategoryController.addAmountToCategory = (categoryName, amount, date) => {
       let currentAmount = monthlySpend.get(year).get(month);
 
       monthlySpend.get(year).set(month, rounder.currencyRound(currentAmount + amount));
-      Category.findByIdAndUpdate(
+      return Category.findByIdAndUpdate(
         categoryEntity._id,
         {"monthlySpend": monthlySpend}
-      ).then(); // for some reason i need this .then(), otherwise the category doesn't update
+      );
     })
 };
 
