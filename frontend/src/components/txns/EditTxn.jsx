@@ -39,7 +39,8 @@ class EditTxn extends Component {
       expenseCategory: txn.expenseCategory || null,
       isSubmitting: false,
       successMessage: "",
-      errorMessage: ""
+      errorMessage: "",
+      showDeleteConfirm: false,
     };
   }
 
@@ -208,6 +209,45 @@ class EditTxn extends Component {
         </Button>
         {successMessage && <Alert severity="success" style={{ marginTop: 8 }}>{successMessage}</Alert>}
         {errorMessage && <Alert severity="error" style={{ marginTop: 8 }}>{errorMessage}</Alert>}
+        <Box mt={2} pt={2} style={{ borderTop: '1px solid #e0e0e0' }}>
+          {!this.state.showDeleteConfirm ? (
+            <Button
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              onClick={() => this.setState({ showDeleteConfirm: true })}
+              disabled={this.state.isSubmitting}
+            >
+              Delete Transaction
+            </Button>
+          ) : (
+            <Box display="flex" style={{ gap: 8 }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => this.setState({ showDeleteConfirm: false })}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                fullWidth
+                onClick={() => {
+                  const { deleteTxn, viewTxnType, refetchData, onSuccess } = this.props;
+                  this.setState({ isSubmitting: true });
+                  deleteTxn(this.props.txn._id).then(() => {
+                    refetchData(viewTxnType);
+                    if (onSuccess) onSuccess();
+                  });
+                }}
+                disabled={this.state.isSubmitting}
+              >
+                Confirm Delete
+              </Button>
+            </Box>
+          )}
+        </Box>
       </div>
     );
   }

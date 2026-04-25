@@ -1,10 +1,9 @@
 import React, {Component} from 'react';
 import {
-  Button, Table, TableBody, TableCell, TableContainer,
+  Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Typography, IconButton, Box, CircularProgress,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent
 } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import EditTxn from './EditTxn';
 
@@ -15,14 +14,13 @@ const transferHeaders = ["Date", "Amount", "Description", "Source Account", "Des
 class ShowTxn extends Component {
 
   state = {
-    showDeleteDialog: false,
     showEditDialog: false,
   }
 
   render() {
     let {txn, accountToName, deleteTxn, refetchData, viewTxnType,
          accounts, incomeCategories, expenseCategories} = this.props;
-    let {showDeleteDialog, showEditDialog} = this.state;
+    let {showEditDialog} = this.state;
     let isExpense = txn.txnType === "Expense";
     let isIncome = txn.txnType === "Income";
     let isTransfer = txn.txnType === "Transfer";
@@ -37,12 +35,9 @@ class ShowTxn extends Component {
       {!isTransfer ? <TableCell>{txn.expenseCategory}</TableCell> : null}
       {!isIncome ? <TableCell>{accountToName(txn.sourceAccount)}</TableCell> : null}
       {!isExpense ? <TableCell>{accountToName(txn.destinationAccount)}</TableCell> : null}
-      <TableCell padding="none" style={{ width: 80 }}>
+      <TableCell padding="none" style={{ width: 40 }}>
         <IconButton size="small" onClick={() => this.setState({ showEditDialog: true })}>
           <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" onClick={() => this.setState({ showDeleteDialog: true })}>
-          <DeleteIcon fontSize="small" />
         </IconButton>
       </TableCell>
 
@@ -62,41 +57,13 @@ class ShowTxn extends Component {
             expenseCategories={expenseCategories}
             accountToName={accountToName}
             refetchData={refetchData}
+            deleteTxn={deleteTxn}
+            viewTxnType={viewTxnType}
             onSuccess={() => this.setState({ showEditDialog: false })}
           />
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog
-        open={showDeleteDialog}
-        onClose={() => this.setState({ showDeleteDialog: false })}
-      >
-        <DialogTitle>Delete Transaction?</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2">
-            {new Date(date).toDateString()} &mdash; ${txn.amount}
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            {txn.description}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => this.setState({ showDeleteDialog: false })}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={() => {
-              this.setState({ showDeleteDialog: false });
-              deleteTxn(txn._id).then(() => refetchData(viewTxnType))
-            }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
     </TableRow>;
   }
 }
@@ -188,7 +155,7 @@ class TxnView extends Component {
           <TableHead>
             <TableRow>
               {headerArray.map(header => <TableCell key={header}>{header}</TableCell>)}
-              <TableCell padding="none" style={{ width: 80 }} />
+              <TableCell padding="none" style={{ width: 40 }} />
             </TableRow>
           </TableHead>
           <TableBody>

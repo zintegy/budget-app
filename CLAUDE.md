@@ -2,7 +2,7 @@
 
 ## Existing Code TODOs
 
-- [ ] Recalculate account amounts when deleting a transaction (`frontend/src/components/AppHome.jsx:97`)
+- [x] Recalculate account amounts when deleting a transaction (`frontend/src/components/AppHome.jsx:97`)
 - [ ] Move TxnTypeSelector into TxnView instead of AppHome (`frontend/src/components/AppHome.jsx:237`)
 - [x] Improve TxnTypeSelector appearance — make it look less like radio buttons (`frontend/src/components/TxnTypeSelector.jsx:10`)
 - [x] Improve AccountTypeSelector appearance — make it look less like radio buttons (`frontend/src/components/AccountTypeSelector.jsx:10`)
@@ -30,7 +30,7 @@
 
 - [ ] Recurring transactions (auto-create monthly bills/income)
 - [ ] Budget vs. actual summary dashboard
-- [ ] Search/filter transactions by merchant
+- [x] Search/filter transactions by merchant
 - [ ] Export transactions to CSV
 - [ ] Multi-year spending comparison
 - [x] Don't allow any edits to forms while submit http requests are still pending, eg for transaction creation
