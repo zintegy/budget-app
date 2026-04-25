@@ -6,7 +6,6 @@ import NewTxn from './txns/NewTxn';
 import AnalysisHome from './analysis/AnalysisHome';
 import NewAccount from './accounts/NewAccount';
 import NewCategory from './categories/NewCategory';
-import TxnTypeSelector from './common/TxnTypeSelector';
 import YearSelector from './common/YearSelector';
 import RenderAccounts from './accounts/AccountView';
 
@@ -395,23 +394,6 @@ class AppHome extends Component {
                 </TabList>
                 <Divider />
                 <TabPanel value="transactions" style={{ padding: 16, flex: 1, overflow: 'auto' }}>
-                  <Box display="flex" alignItems="center" mb={1}>
-                    <TxnTypeSelector
-                      name="selectTxnViewButtons"
-                      id="selectTxnViewButtons"
-                      onChange={this.viewTxnOnChange}
-                      value={viewTxnType}
-                    />
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={this.loadAllTxns}
-                      disabled={isLoadingMore}
-                      style={{ marginLeft: 16 }}
-                    >
-                      {isLoadingMore ? "Loading..." : "Load All"}
-                    </Button>
-                  </Box>
                   <Box display="flex" alignItems="center" mb={1} style={{ gap: 8 }}>
                     <TextField
                       size="small"
@@ -453,6 +435,8 @@ class AppHome extends Component {
                     txns={filteredTxns}
                     deleteTxn={this.deleteTxn}
                     viewTxnType={viewTxnType}
+                    onTxnTypeChange={this.viewTxnOnChange}
+                    loadAllTxns={this.loadAllTxns}
                     accountToName={this.accountToName}
                     refetchData={this.refetchData}
                     loadMoreTxns={this.loadMoreTxns}

@@ -1,7 +1,16 @@
 import React from 'react';
 import {Select, MenuItem} from '@material-ui/core';
 
+const START_YEAR = 2021;
+
 const YearSelector = ({name, id, value, onChange, style}) => {
+  const currentYear = new Date().getFullYear();
+  const endYear = Math.max(currentYear + 1, value);
+  const years = [];
+  for (let y = START_YEAR; y <= endYear; y++) {
+    years.push(y);
+  }
+
   return <Select
       onChange={onChange}
       name={name}
@@ -9,15 +18,7 @@ const YearSelector = ({name, id, value, onChange, style}) => {
       value={value}
       style={style}
     >
-      <MenuItem value={2021}>2021</MenuItem>
-      <MenuItem value={2022}>2022</MenuItem>
-      <MenuItem value={2023}>2023</MenuItem>
-      <MenuItem value={2024}>2024</MenuItem>
-      <MenuItem value={2025}>2025</MenuItem>
-      <MenuItem value={2026}>2026</MenuItem>
-      <MenuItem value={2027}>2027</MenuItem>
-      <MenuItem value={2028}>2028</MenuItem>
-      <MenuItem value={2029}>2029</MenuItem>
+      {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
     </Select>
 }
 

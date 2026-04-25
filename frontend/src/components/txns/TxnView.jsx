@@ -1,11 +1,12 @@
 import React, {Component} from 'react';
 import {
-  Table, TableBody, TableCell, TableContainer,
+  Button, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Typography, IconButton, Box, CircularProgress,
   Dialog, DialogTitle, DialogContent
 } from '@material-ui/core';
 import EditIcon from '@material-ui/icons/Edit';
 import EditTxn from './EditTxn';
+import TxnTypeSelector from '../common/TxnTypeSelector';
 
 const expenseHeaders = ["Date", "Amount", "Merchant", "Description", "Category", "Account"]
 const incomeHeaders = ["Date", "Amount", "Description", "Income Category", "Expense Category", "Account"]
@@ -123,7 +124,8 @@ class TxnView extends Component {
 
   render() {
     let { txns, deleteTxn, viewTxnType, accountToName, refetchData, isLoadingMore,
-          accounts, incomeCategories, expenseCategories } = this.props;
+          accounts, incomeCategories, expenseCategories,
+          onTxnTypeChange, loadAllTxns } = this.props;
 
     let txnRows = (txns && txns.length > 0)
       ? txns.filter(txn => txn.txnType === viewTxnType)
@@ -140,29 +142,45 @@ class TxnView extends Component {
         />)
       : [];
 
-    if (txnRows.length === 0) {
-      return <Typography variant="body2" color="textSecondary" style={{ padding: 16 }}>No transactions</Typography>
-    }
-
     let headerArray = [];
     if (viewTxnType === "Expense") headerArray = expenseHeaders;
     else if (viewTxnType === "Income") headerArray = incomeHeaders;
     else if (viewTxnType === "Transfer") headerArray = transferHeaders;
 
     return <div>
-      <TableContainer>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {headerArray.map(header => <TableCell key={header}>{header}</TableCell>)}
-              <TableCell padding="none" style={{ width: 40 }} />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {txnRows}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Box display="flex" alignItems="center" mb={1}>
+        <TxnTypeSelector
+          name="selectTxnViewButtons"
+          id="selectTxnViewButtons"
+          onChange={onTxnTypeChange}
+          value={viewTxnType}
+        />
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={loadAllTxns}
+          disabled={isLoadingMore}
+          style={{ marginLeft: 16 }}
+        >
+          {isLoadingMore ? "Loading..." : "Load All"}
+        </Button>
+      </Box>
+      {txnRows.length === 0
+        ? <Typography variant="body2" color="textSecondary" style={{ padding: 16 }}>No transactions</Typography>
+        : <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  {headerArray.map(header => <TableCell key={header}>{header}</TableCell>)}
+                  <TableCell padding="none" style={{ width: 40 }} />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {txnRows}
+              </TableBody>
+            </Table>
+          </TableContainer>
+      }
       {isLoadingMore && (
         <Box display="flex" justifyContent="center" py={2}>
           <CircularProgress size={24} />
