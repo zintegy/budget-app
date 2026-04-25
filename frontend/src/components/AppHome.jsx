@@ -12,7 +12,8 @@ import RenderAccounts from './accounts/AccountView';
 
 import {
   Button, Typography, Box, Paper, AppBar, Toolbar,
-  Dialog, DialogTitle, DialogContent, Tab, Divider
+  Dialog, DialogTitle, DialogContent, Tab, Divider,
+  TextField, MenuItem, Select, FormControl, InputLabel
 } from '@material-ui/core';
 import {Alert, TabContext, TabList, TabPanel} from '@material-ui/lab';
 import AddIcon from '@material-ui/icons/Add';
@@ -27,6 +28,8 @@ class AppHome extends Component {
     expenseCategories: [],
     year: new Date().getFullYear(),
     fetchError: "",
+    searchText: "",
+    filterCategory: "",
     totalTxnCount: 0,
     isLoadingMore: false,
     reconcileResult: null,
@@ -188,7 +191,8 @@ class AppHome extends Component {
   viewTxnOnChange = (e) => {
     let target = e.target;
     this.setState({
-      viewTxnType: target.value
+      viewTxnType: target.value,
+      filterCategory: "",
     });
   }
 
@@ -213,6 +217,8 @@ class AppHome extends Component {
       incomeCategories,
       year,
       fetchError,
+      searchText,
+      filterCategory,
       totalTxnCount,
       isLoadingMore,
       reconcileResult,
@@ -224,6 +230,20 @@ class AppHome extends Component {
 
     const hasMismatches = reconcileResult &&
       (reconcileResult.accountDiffs.length > 0 || reconcileResult.categoryDiffs.length > 0);
+
+    let filteredTxns = txns;
+    if (searchText) {
+      const lower = searchText.toLowerCase();
+      filteredTxns = filteredTxns.filter(t =>
+        (t.merchant && t.merchant.toLowerCase().includes(lower)) ||
+        (t.description && t.description.toLowerCase().includes(lower))
+      );
+    }
+    if (filterCategory) {
+      filteredTxns = filteredTxns.filter(t =>
+        t.expenseCategory === filterCategory || t.incomeCategory === filterCategory
+      );
+    }
 
     return (
       <div className="app-root">
@@ -392,8 +412,45 @@ class AppHome extends Component {
                       {isLoadingMore ? "Loading..." : "Load All"}
                     </Button>
                   </Box>
+                  <Box display="flex" alignItems="center" mb={1} style={{ gap: 8 }}>
+                    <TextField
+                      size="small"
+                      variant="outlined"
+                      placeholder="Search merchant/description..."
+                      value={searchText}
+                      onChange={(e) => this.setState({ searchText: e.target.value })}
+                      style={{ flex: 1, minWidth: 160 }}
+                    />
+                    {viewTxnType !== "Transfer" && (
+                      <FormControl variant="outlined" size="small" style={{ minWidth: 160 }}>
+                        <InputLabel>Category</InputLabel>
+                        <Select
+                          value={filterCategory}
+                          onChange={(e) => this.setState({ filterCategory: e.target.value })}
+                          label="Category"
+                        >
+                          <MenuItem value="">
+                            <em>All</em>
+                          </MenuItem>
+                          {(viewTxnType === "Expense" ? expenseCategories : incomeCategories).map(cat => (
+                            <MenuItem key={cat._id} value={cat.categoryName}>
+                              {cat.categoryName}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                    {(searchText || filterCategory) && (
+                      <Button
+                        size="small"
+                        onClick={() => this.setState({ searchText: "", filterCategory: "" })}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </Box>
                   <TxnView
-                    txns={txns}
+                    txns={filteredTxns}
                     deleteTxn={this.deleteTxn}
                     viewTxnType={viewTxnType}
                     accountToName={this.accountToName}
