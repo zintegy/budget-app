@@ -18,6 +18,7 @@ class ShowTxn extends Component {
     showEditDialog: false,
   }
 
+
   render() {
     let {txn, accountToName, deleteTxn, refetchData, viewTxnType,
          accounts, incomeCategories, expenseCategories} = this.props;
@@ -27,8 +28,16 @@ class ShowTxn extends Component {
     let isTransfer = txn.txnType === "Transfer";
     let date = txn.txnDate.substring(0, txn.txnDate.length - 1)
 
+    const options = {
+      weekday: "short",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+
+
     return <TableRow key={txn._id} hover>
-      <TableCell>{new Date(date).toDateString()}</TableCell>
+      <TableCell>{new Date(date).toLocaleDateString("en-US", options)}</TableCell>
       <TableCell>${txn.amount}</TableCell>
       {isExpense ? <TableCell>{txn.merchant}</TableCell> : null}
       <TableCell>{txn.description}</TableCell>

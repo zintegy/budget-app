@@ -9,6 +9,12 @@ const RenderAccounts = ({accounts}) => {
   if (!accounts || accounts.length === 0) {
     return <Typography variant="body2" color="textSecondary">No accounts</Typography>
   }
+  const options = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  };
+
 
   return <TableContainer>
     <Table size="small">
@@ -24,7 +30,7 @@ const RenderAccounts = ({accounts}) => {
           <TableRow key={account._id} hover>
             <TableCell>{account.accountName}</TableCell>
             <TableCell>{account.currentAmount}</TableCell>
-            <TableCell>{account.lastTxnDate}</TableCell>
+            <TableCell>{new Date(account.lastTxnDate).toLocaleDateString("en-US", options)}</TableCell>
           </TableRow>
         ))}
       </TableBody>

@@ -1,7 +1,5 @@
 import React, {Component} from 'react';
 import AnnualCategoryTable from './AnnualCategoryTable'
-import AnnualCategoryGraphs from './AnnualCategoryGraphs'
-/*import axios from 'axios';*/
 
 class AnalysisHome extends Component {
   render() {
@@ -9,7 +7,6 @@ class AnalysisHome extends Component {
 
     return (
       <div className="analysis">
-        {AnnualCategoryGraphs(incomeCategories, expenseCategories, year)}
         <AnnualCategoryTable
           incomeCategories={incomeCategories}
           expenseCategories={expenseCategories}
