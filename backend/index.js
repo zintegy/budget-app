@@ -1,9 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const txnRoutes = require('./routes/txn.routes');
 const accountRoutes = require('./routes/account.routes');
 const categoryRoutes = require('./routes/category.routes');
+const authRoutes = require('./routes/auth.routes');
 const cors = require('cors')
 
 const path = require('path');
@@ -27,6 +29,21 @@ app.use(cors({
 }));
 
 app.use(bodyParser.json());
+
+app.use('/authApi', authRoutes);
+
+app.use((req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid token' });
+  }
+  try {
+    jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+});
 
 app.use('/txnApi', txnRoutes);
 app.use('/accountApi', accountRoutes);

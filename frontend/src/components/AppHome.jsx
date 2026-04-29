@@ -10,12 +10,13 @@ import YearSelector from './common/YearSelector';
 import RenderAccounts from './accounts/AccountView';
 
 import {
-  Button, Typography, Box, Paper, AppBar, Toolbar,
+  Button, IconButton, Typography, Box, Paper, AppBar, Toolbar,
   Dialog, DialogTitle, DialogContent, Tab, Divider,
   TextField, MenuItem, Select, FormControl, InputLabel
 } from '@material-ui/core';
 import {Alert, TabContext, TabList, TabPanel} from '@material-ui/lab';
 import AddIcon from '@material-ui/icons/Add';
+import HomeIcon from '@material-ui/icons/Home';
 
 class AppHome extends Component {
   state = {
@@ -249,6 +250,9 @@ class AppHome extends Component {
         {/* AppBar */}
         <AppBar position="static" color="primary" elevation={1}>
           <Toolbar>
+            <IconButton edge="start" color="inherit" href="/" style={{ marginRight: 8 }}>
+              <HomeIcon />
+            </IconButton>
             <Typography variant="h6" style={{ flexGrow: 1 }}>
               Budget Tracker
             </Typography>
