@@ -7,6 +7,17 @@ const DateInput = ({id, label, selectedDate, onChange}) => {
     selectedDate = new Date();
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const current = selectedDate instanceof Date ? selectedDate : new Date(selectedDate);
+      if (isNaN(current.getTime())) return;
+      const next = new Date(current);
+      next.setDate(next.getDate() + (e.key === 'ArrowUp' ? 1 : -1));
+      onChange(next);
+    }
+  };
+
   return (
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
       <KeyboardDatePicker
@@ -18,6 +29,7 @@ const DateInput = ({id, label, selectedDate, onChange}) => {
             label={label}
             value={selectedDate}
             onChange={onChange}
+            onKeyDown={handleKeyDown}
             KeyboardButtonProps={{
               'aria-label': 'change date',
             }}

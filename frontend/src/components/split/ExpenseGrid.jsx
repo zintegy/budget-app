@@ -1,10 +1,13 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, InputBase, IconButton, Typography, makeStyles, TextField, Checkbox
 } from '@material-ui/core';
-import { Autocomplete } from '@material-ui/lab';
+import { Autocomplete, Alert } from '@material-ui/lab';
+import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
 import DeleteIcon from '@material-ui/icons/Delete';
+import http from '../http-common';
 
 const useStyles = makeStyles({
   table: {
@@ -34,8 +37,12 @@ const useStyles = makeStyles({
 
 let nextId = 1;
 
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
 const makeEmptyRow = (members) => ({
   id: nextId++,
+  date: todayStr(),
+  vendor: '',
   description: '',
   amount: '',
   paidBy: '',
@@ -67,6 +74,23 @@ const computeActualSpends = (amount, splits, members, equalSplit) => {
   }, {});
 };
 
+const rowToPayload = (row) => {
+  const splits = {};
+  Object.entries(row.splits).forEach(([k, v]) => {
+    const num = parseFloat(v);
+    if (!isNaN(num)) splits[k] = num;
+  });
+  return {
+    date: row.date,
+    vendor: row.vendor,
+    description: row.description,
+    amount: parseFloat(row.amount) || 0,
+    paidBy: row.paidBy,
+    equalSplit: row.equalSplit,
+    splits,
+  };
+};
+
 const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellChange, onCellBlur, onKeyDown, onEnterFromRow, onDelete, onToggleEqual, inputRef, classes }) => {
   const isEditing = (field) => editingCell && editingCell.rowId === row.id && editingCell.field === field;
   const acOpenRef = useRef(false);
@@ -86,6 +110,49 @@ const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellCha
     }
 
     if (isEditing(field)) {
+      if (field === 'date') {
+        const dateVal = value ? new Date(value + 'T00:00:00') : new Date();
+        const handleDateChange = (d) => {
+          if (d && !isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            onCellChange(row.id, 'date', `${yyyy}-${mm}-${dd}`);
+          }
+        };
+        const handleDateKeyDown = (e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const current = value ? new Date(value + 'T00:00:00') : new Date();
+            if (isNaN(current.getTime())) return;
+            const next = new Date(current);
+            next.setDate(next.getDate() + (e.key === 'ArrowUp' ? 1 : -1));
+            handleDateChange(next);
+          } else {
+            onKeyDown(e, row.id, field);
+          }
+        };
+        return (
+          <TableCell style={{ padding: '4px 8px' }}>
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+              <KeyboardDatePicker
+                disableToolbar
+                variant="inline"
+                format="yyyy-MM-dd"
+                value={dateVal}
+                onChange={handleDateChange}
+                onKeyDown={handleDateKeyDown}
+                onClose={() => onCellBlur(row.id)}
+                autoOk
+                InputAdornmentProps={{ style: { display: 'none' } }}
+                InputProps={{ disableUnderline: true, style: inputStyle }}
+                inputProps={{ style: { padding: '2px 0' } }}
+                style={{ width: '100%' }}
+              />
+            </MuiPickersUtilsProvider>
+          </TableCell>
+        );
+      }
       if (field === 'paidBy') {
         return (
           <TableCell style={{ padding: '4px 8px' }}>
@@ -143,7 +210,8 @@ const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellCha
       );
     }
 
-    const display = type === 'number' && value !== '' ? parseFloat(value).toFixed(2) : value;
+    let display = value;
+    if (type === 'number' && value !== '') display = parseFloat(value).toFixed(2);
     return (
       <TableCell
         style={{ ...cellStyle, color: !display ? '#aaa' : 'inherit' }}
@@ -158,6 +226,8 @@ const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellCha
 
   return (
     <TableRow hover style={{ opacity: isDraft ? 0.5 : 1 }}>
+      {renderCell('date', row.date, 'date')}
+      {renderCell('vendor', row.vendor)}
       {renderCell('description', row.description)}
       {renderCell('amount', row.amount, 'number')}
       {renderCell('paidBy', row.paidBy)}
@@ -208,22 +278,47 @@ const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellCha
   );
 };
 
-const ExpenseGrid = ({ members }) => {
+const ExpenseGrid = ({ members, tripId }) => {
   const classes = useStyles();
   const [rows, setRows] = useState([]);
   const [draftRow, setDraftRow] = useState(() => makeEmptyRow(members));
   const [editingCell, setEditingCell] = useState(null);
+  const [saveError, setSaveError] = useState('');
   const inputRef = useRef(null);
   const draftRef = useRef(draftRow);
   const editingRef = useRef(editingCell);
   const rowsRef = useRef(rows);
+  const saveTimersRef = useRef({});
 
   // Keep refs in sync with state
   draftRef.current = draftRow;
   editingRef.current = editingCell;
   rowsRef.current = rows;
 
-  const baseFields = ['description', 'amount', 'paidBy', 'equalSplit'];
+  // Load expenses from backend on mount
+  useEffect(() => {
+    http.get(`/tripApi/trip/${tripId}/expense`)
+      .then(res => {
+        const loaded = res.data.map(doc => ({
+          id: doc._id,
+          date: doc.date ? doc.date.slice(0, 10) : todayStr(),
+          vendor: doc.vendor || '',
+          description: doc.description || '',
+          amount: doc.amount ? String(doc.amount) : '',
+          paidBy: doc.paidBy || '',
+          equalSplit: doc.equalSplit || false,
+          splits: members.reduce((acc, m) => {
+            const val = doc.splits && doc.splits[m];
+            acc[m] = val != null ? String(val) : '';
+            return acc;
+          }, {}),
+        }));
+        setRows(loaded);
+      })
+      .catch(() => setSaveError('Failed to load expenses.'));
+  }, [tripId, members]);
+
+  const baseFields = ['date', 'vendor', 'description', 'amount', 'paidBy', 'equalSplit'];
   const splitFields = members.map(m => `split_${m}`);
   const fullFieldOrder = [...baseFields, ...splitFields];
 
@@ -234,6 +329,23 @@ const ExpenseGrid = ({ members }) => {
     if (row && row.equalSplit) return baseFields;
     return fullFieldOrder;
   }, [baseFields, fullFieldOrder]);
+
+  const saveRow = useCallback((rowId) => {
+    if (typeof rowId !== 'string') return; // not yet persisted
+    const row = rowsRef.current.find(r => r.id === rowId);
+    if (!row) return;
+    http.put(`/tripApi/trip/${tripId}/expense/${rowId}`, rowToPayload(row))
+      .catch(() => setSaveError('Failed to save expense.'));
+  }, [tripId]);
+
+  const debouncedSave = useCallback((rowId) => {
+    if (typeof rowId !== 'string') return;
+    if (saveTimersRef.current[rowId]) clearTimeout(saveTimersRef.current[rowId]);
+    saveTimersRef.current[rowId] = setTimeout(() => {
+      saveRow(rowId);
+      delete saveTimersRef.current[rowId];
+    }, 500);
+  }, [saveRow]);
 
   const handleCellClick = useCallback((rowId, field) => {
     setEditingCell({ rowId, field });
@@ -256,12 +368,12 @@ const ExpenseGrid = ({ members }) => {
       return prev;
     });
     setRows(prev => prev.map(r => r.id === rowId ? update(r) : r));
-  }, [members]);
+    debouncedSave(rowId);
+  }, [members, debouncedSave]);
 
   const handleToggleEqual = useCallback((rowId) => {
     const toggle = (row) => {
       const next = !row.equalSplit;
-      console.log(`[ExpenseGrid] toggleEqual rowId=${rowId} equalSplit: ${row.equalSplit} → ${next}`);
       if (next) {
         const empty = members.reduce((acc, m) => ({ ...acc, [m]: '' }), {});
         return { ...row, equalSplit: true, splits: empty };
@@ -270,30 +382,38 @@ const ExpenseGrid = ({ members }) => {
     };
     setDraftRow(prev => (prev.id === rowId ? toggle(prev) : prev));
     setRows(prev => prev.map(r => r.id === rowId ? toggle(r) : r));
-  }, [members]);
+    // Immediate save for committed rows (setTimeout 0 to read latest state)
+    if (typeof rowId === 'string') {
+      setTimeout(() => saveRow(rowId), 0);
+    }
+  }, [members, saveRow]);
 
   const promoteDraft = useCallback(() => {
     const d = draftRef.current;
-    const hasContent = d.description || d.amount || d.paidBy;
+    const hasContent = d.description || d.amount || d.paidBy || d.vendor;
     if (hasContent) {
+      const localId = d.id;
       setRows(prev => {
-        // Guard against double-promotion
         if (prev.some(r => r.id === d.id)) return prev;
         return [...prev, d];
       });
+      // POST to backend
+      http.post(`/tripApi/trip/${tripId}/expense`, rowToPayload(d))
+        .then(res => {
+          // Replace local numeric id with MongoDB _id
+          setRows(prev => prev.map(r => r.id === localId ? { ...r, id: res.data._id } : r));
+        })
+        .catch(() => setSaveError('Failed to create expense.'));
       const newDraft = makeEmptyRow(members);
       draftRef.current = newDraft;
       setDraftRow(newDraft);
     }
-  }, [members]);
+  }, [members, tripId]);
 
   const handleCellBlur = useCallback((rowId) => {
-    // Snapshot what was being edited at blur time
     const atBlurTime = editingRef.current;
-    // Small delay to allow focus to move to the next cell via Tab/click
     setTimeout(() => {
       const current = editingRef.current;
-      // Only clear if editingCell hasn't changed since blur (focus truly left the grid)
       if (current && atBlurTime
         && current.rowId === atBlurTime.rowId
         && current.field === atBlurTime.field) {
@@ -317,7 +437,6 @@ const ExpenseGrid = ({ members }) => {
       const rowIdx = allRowIds.indexOf(rowId);
 
       if (e.shiftKey) {
-        // Shift+Tab — move left, wrap to previous row's last field
         if (idx > 0) {
           setEditingCell({ rowId, field: fields[idx - 1] });
         } else if (rowIdx > 0) {
@@ -326,18 +445,16 @@ const ExpenseGrid = ({ members }) => {
           setEditingCell({ rowId: prevId, field: prevFields[prevFields.length - 1] });
         }
       } else {
-        // Tab — move right, wrap to next row's first field
         if (idx < fields.length - 1) {
           setEditingCell({ rowId, field: fields[idx + 1] });
         } else {
-          // Last field in row — advance to next row's description
           if (rowId === draftRef.current.id) {
             promoteDraft();
             setTimeout(() => {
-              setEditingCell({ rowId: draftRef.current.id, field: 'description' });
+              setEditingCell({ rowId: draftRef.current.id, field: 'date' });
             }, 0);
           } else if (rowIdx < allRowIds.length - 1) {
-            setEditingCell({ rowId: allRowIds[rowIdx + 1], field: 'description' });
+            setEditingCell({ rowId: allRowIds[rowIdx + 1], field: 'date' });
           }
         }
       }
@@ -350,32 +467,43 @@ const ExpenseGrid = ({ members }) => {
     if (rowId === draftRef.current.id) {
       promoteDraft();
       setTimeout(() => {
-        setEditingCell({ rowId: draftRef.current.id, field: 'description' });
+        setEditingCell({ rowId: draftRef.current.id, field: 'date' });
       }, 0);
     } else {
       const currentRows = rowsRef.current;
       const idx = currentRows.findIndex(r => r.id === rowId);
       if (idx < currentRows.length - 1) {
-        setEditingCell({ rowId: currentRows[idx + 1].id, field: 'description' });
+        setEditingCell({ rowId: currentRows[idx + 1].id, field: 'date' });
       } else {
-        setEditingCell({ rowId: draftRef.current.id, field: 'description' });
+        setEditingCell({ rowId: draftRef.current.id, field: 'date' });
       }
     }
   }, [promoteDraft]);
 
   const handleDelete = useCallback((rowId) => {
     setRows(prev => prev.filter(r => r.id !== rowId));
-  }, []);
+    if (typeof rowId === 'string') {
+      http.delete(`/tripApi/trip/${tripId}/expense/${rowId}`)
+        .catch(() => setSaveError('Failed to delete expense.'));
+    }
+  }, [tripId]);
 
   return (
     <Paper style={{ marginTop: 24 }}>
       <Typography variant="subtitle1" style={{ fontWeight: 600, padding: '16px 16px 8px' }}>
         Expenses
       </Typography>
+      {saveError && (
+        <Alert severity="error" style={{ margin: '0 16px 8px' }} onClose={() => setSaveError('')}>
+          {saveError}
+        </Alert>
+      )}
       <TableContainer>
         <Table size="small" className={classes.table}>
           <TableHead>
             <TableRow>
+              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>Date</TableCell>
+              <TableCell rowSpan={2} style={{ fontWeight: 600 }}>Vendor</TableCell>
               <TableCell rowSpan={2} style={{ fontWeight: 600 }}>Description</TableCell>
               <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>Amount</TableCell>
               <TableCell rowSpan={2} style={{ fontWeight: 600, width: 110 }}>Paid By</TableCell>

@@ -123,7 +123,7 @@ const TripHome = () => {
                 {submitting ? 'Retiring...' : 'Retire Trip'}
               </Button>
             </Paper>
-            <ExpenseGrid members={trip.members} />
+            <ExpenseGrid members={trip.members} tripId={trip._id} />
           </>
         ) : (
           <Paper style={{ padding: 24 }}>
