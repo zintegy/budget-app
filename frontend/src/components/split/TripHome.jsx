@@ -7,6 +7,7 @@ import {
 import { Alert } from '@material-ui/lab';
 import HomeIcon from '@material-ui/icons/Home';
 import http from '../http-common';
+import ExpenseGrid from './ExpenseGrid';
 
 const TripHome = () => {
   const [trip, setTrip] = useState(null);
@@ -89,7 +90,7 @@ const TripHome = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" style={{ marginTop: 32 }}>
+      <Container maxWidth="lg" style={{ marginTop: 32 }}>
         {error && (
           <Alert severity="error" style={{ marginBottom: 16 }} onClose={() => setError('')}>
             {error}
@@ -99,28 +100,31 @@ const TripHome = () => {
         {loading ? (
           <Typography>Loading...</Typography>
         ) : trip ? (
-          <Paper style={{ padding: 24 }}>
-            <Typography variant="h5" style={{ fontWeight: 600 }}>
-              {trip.name}
-            </Typography>
-            <Typography variant="body2" color="textSecondary" style={{ marginTop: 4 }}>
-              Created {new Date(trip.createdAt).toLocaleDateString()}
-            </Typography>
-            <Box style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
-              {trip.members.map(m => (
-                <Chip key={m} label={m} />
-              ))}
-            </Box>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleRetireTrip}
-              disabled={submitting}
-              style={{ marginTop: 24 }}
-            >
-              {submitting ? 'Retiring...' : 'Retire Trip'}
-            </Button>
-          </Paper>
+          <>
+            <Paper style={{ padding: 24 }}>
+              <Typography variant="h5" style={{ fontWeight: 600 }}>
+                {trip.name}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" style={{ marginTop: 4 }}>
+                Created {new Date(trip.createdAt).toLocaleDateString()}
+              </Typography>
+              <Box style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+                {trip.members.map(m => (
+                  <Chip key={m} label={m} />
+                ))}
+              </Box>
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={handleRetireTrip}
+                disabled={submitting}
+                style={{ marginTop: 24 }}
+              >
+                {submitting ? 'Retiring...' : 'Retire Trip'}
+              </Button>
+            </Paper>
+            <ExpenseGrid members={trip.members} />
+          </>
         ) : (
           <Paper style={{ padding: 24 }}>
             <Typography variant="h6" style={{ fontWeight: 600, marginBottom: 16 }}>
