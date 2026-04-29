@@ -4,6 +4,7 @@ import {
   Box, Card, CardActionArea, CardContent, Typography, Container
 } from '@material-ui/core';
 import AccountBalanceWalletIcon from '@material-ui/icons/AccountBalanceWallet';
+import GroupIcon from '@material-ui/icons/Group';
 
 const tools = [
   {
@@ -11,6 +12,12 @@ const tools = [
     description: 'Track transactions, manage accounts, and analyze spending',
     path: '/budgeting',
     icon: <AccountBalanceWalletIcon style={{ fontSize: 48, color: '#1976d2' }} />,
+  },
+  {
+    title: 'Trip Splitter',
+    description: 'Split trip expenses among friends',
+    path: '/split',
+    icon: <GroupIcon style={{ fontSize: 48, color: '#1976d2' }} />,
   },
 ];
 

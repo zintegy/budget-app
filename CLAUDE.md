@@ -43,3 +43,9 @@
 - [x] add real support for an 'edit txn' popup, rather than deleting and re-creating. for now, don't allow the source accounts to change - only title, description, etc.
 - [x] add support for modifying the accounts and categories of an existing transaction. this means the transaction has to be removed from those accounts (and thus erasing the effect the transaction had on those accounts/categories), then added to the new account/category.
 - [ ] add a 'bulk update' approach whre i can copy data from a bank statement/website and have those transactions be added with an option to adjust multiple options' descriptions and categories at once
+
+## Trip Splitter
+
+- [ ] Allow viewing retired trips (history)
+- [ ] Add expense tracking within a trip
+- [ ] Add settlement calculation (who owes whom)

@@ -6,6 +6,7 @@ const txnRoutes = require('./routes/txn.routes');
 const accountRoutes = require('./routes/account.routes');
 const categoryRoutes = require('./routes/category.routes');
 const authRoutes = require('./routes/auth.routes');
+const tripRoutes = require('./routes/trip.routes');
 const cors = require('cors')
 
 const path = require('path');
@@ -31,6 +32,7 @@ app.use(cors({
 app.use(bodyParser.json());
 
 app.use('/authApi', authRoutes);
+app.use('/tripApi', tripRoutes);
 
 app.use((req, res, next) => {
   const authHeader = req.headers.authorization;

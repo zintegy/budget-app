@@ -7,6 +7,7 @@ import minimal from './themes/minimal';
 import AppHome from './components/AppHome';
 import HomePage from './components/HomePage';
 import LoginScreen from './components/LoginScreen';
+import TripHome from './components/split/TripHome';
 
 const BudgetingRoute = () => {
   const [authenticated, setAuthenticated] = useState(() => !!localStorage.getItem('token'));
@@ -30,6 +31,7 @@ const App = () => {
         <Switch>
           <Route exact path="/" component={HomePage} />
           <Route path="/budgeting" component={BudgetingRoute} />
+          <Route path="/split" component={TripHome} />
           <Redirect to="/" />
         </Switch>
       </BrowserRouter>
