@@ -455,7 +455,7 @@ const ExpenseGrid = ({ members, tripId, currency }) => {
     });
     setRows(prev => prev.map(r => r.id === rowId ? update(r) : r));
     debouncedSave(rowId);
-  }, [members, debouncedSave]);
+  }, [debouncedSave]);
 
   const handleToggleEqual = useCallback((rowId) => {
     const toggle = (row) => {
@@ -511,6 +511,23 @@ const ExpenseGrid = ({ members, tripId, currency }) => {
     }, 100);
   }, [promoteDraft]);
 
+  const handleEnterFromRow = useCallback((rowId) => {
+    if (rowId === draftRef.current.id) {
+      promoteDraft();
+      setTimeout(() => {
+        setEditingCell({ rowId: draftRef.current.id, field: 'date' });
+      }, 0);
+    } else {
+      const currentRows = rowsRef.current;
+      const idx = currentRows.findIndex(r => r.id === rowId);
+      if (idx < currentRows.length - 1) {
+        setEditingCell({ rowId: currentRows[idx + 1].id, field: 'date' });
+      } else {
+        setEditingCell({ rowId: draftRef.current.id, field: 'date' });
+      }
+    }
+  }, [promoteDraft]);
+
   const handleKeyDown = useCallback((e, rowId, field) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -547,24 +564,7 @@ const ExpenseGrid = ({ members, tripId, currency }) => {
     } else if (e.key === 'Escape') {
       setEditingCell(null);
     }
-  }, [getFieldOrder, promoteDraft]);
-
-  const handleEnterFromRow = useCallback((rowId) => {
-    if (rowId === draftRef.current.id) {
-      promoteDraft();
-      setTimeout(() => {
-        setEditingCell({ rowId: draftRef.current.id, field: 'date' });
-      }, 0);
-    } else {
-      const currentRows = rowsRef.current;
-      const idx = currentRows.findIndex(r => r.id === rowId);
-      if (idx < currentRows.length - 1) {
-        setEditingCell({ rowId: currentRows[idx + 1].id, field: 'date' });
-      } else {
-        setEditingCell({ rowId: draftRef.current.id, field: 'date' });
-      }
-    }
-  }, [promoteDraft]);
+  }, [getFieldOrder, promoteDraft, handleEnterFromRow]);
 
   const handleDelete = useCallback((rowId) => {
     setRows(prev => prev.filter(r => r.id !== rowId));
