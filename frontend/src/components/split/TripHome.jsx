@@ -144,7 +144,7 @@ const TripHome = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" style={{ marginTop: 32 }}>
+      <Container maxWidth={false} style={{ marginTop: 32, paddingLeft: 32, paddingRight: 32 }}>
         {error && (
           <Alert severity="error" style={{ marginBottom: 16 }} onClose={() => setError('')}>
             {error}

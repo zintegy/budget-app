@@ -625,16 +625,16 @@ const ExpenseGrid = ({ members, tripId, currency }) => {
             <TableRow>
               <TableCell rowSpan={2} style={{ width: 30 }} />
               <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>Date</TableCell>
-              <TableCell rowSpan={2} style={{ fontWeight: 600 }}>Vendor</TableCell>
-              <TableCell rowSpan={2} style={{ fontWeight: 600 }}>Description</TableCell>
+              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 160 }}>Vendor</TableCell>
+              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 200 }}>Description</TableCell>
               {isMultiCurrency && (
-                <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>{currency} Amt</TableCell>
+                <TableCell rowSpan={2} style={{ fontWeight: 600, width: 70 }}>{currency} Amt</TableCell>
               )}
-              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>
+              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 70 }}>
                 {isMultiCurrency ? 'USD Amt' : 'Amount'}
               </TableCell>
-              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 110 }}>Paid By</TableCell>
-              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 60, textAlign: 'center' }}>Equal?</TableCell>
+              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 88 }}>Paid By</TableCell>
+              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 75, textAlign: 'center' }}>Equal Split</TableCell>
               <TableCell
                 colSpan={members.length}
                 align="center"
@@ -654,13 +654,13 @@ const ExpenseGrid = ({ members, tripId, currency }) => {
             </TableRow>
             <TableRow>
               {members.map(m => (
-                <TableCell key={m} style={{ fontWeight: 600, width: 90, paddingTop: 0 }}>{m}</TableCell>
+                <TableCell key={m} style={{ fontWeight: 600, width: 45, paddingTop: 0 }}>{m}</TableCell>
               ))}
               {members.map((m, i) => (
                 <TableCell
                   key={`actual_${m}`}
                   className={`${classes.actualCell}${i === 0 ? ` ${classes.sectionDivider}` : ''}`}
-                  style={{ fontWeight: 600, width: 90, paddingTop: 0 }}
+                  style={{ fontWeight: 600, width: 45, paddingTop: 0 }}
                 >
                   {m}
                 </TableCell>
