@@ -336,6 +336,12 @@ const ExpenseRow = ({ row, isDraft, members, isMultiCurrency, editingCell, onCel
         />
       </TableCell>
       {members.map(m => renderCell(`split_${m}`, row.splits[m] ?? '', 'number'))}
+      <TableCell className={classes.sectionDivider} style={{ padding: '4px 8px', fontWeight: 600 }}>
+        {(() => {
+          const sum = members.reduce((s, m) => s + (parseFloat(row.splits[m]) || 0), 0);
+          return sum ? sum.toFixed(2) : '\u00A0';
+        })()}
+      </TableCell>
       {members.map((m, i) => (
         <TableCell
           key={`actual_${m}`}
@@ -641,6 +647,13 @@ const ExpenseGrid = ({ members, tripId, currency }) => {
                 style={{ fontWeight: 600, padding: '4px 8px', borderBottom: 'none' }}
               >
                 Split Ratios
+              </TableCell>
+              <TableCell
+                rowSpan={2}
+                className={classes.sectionDivider}
+                style={{ fontWeight: 600, width: 55, padding: '4px 8px' }}
+              >
+                Subtotal
               </TableCell>
               <TableCell
                 colSpan={members.length}
