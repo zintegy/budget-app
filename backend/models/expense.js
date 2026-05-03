@@ -23,6 +23,10 @@ const expenseSchema = new Schema({
     type: Number,
     default: 0
   },
+  amountLocal: {
+    type: Number,
+    default: 0
+  },
   paidBy: {
     type: String,
     default: ''
@@ -35,6 +39,10 @@ const expenseSchema = new Schema({
     type: Map,
     of: Number,
     default: {}
+  },
+  order: {
+    type: Number,
+    default: 0
   },
   createdAt: {
     type: Date,

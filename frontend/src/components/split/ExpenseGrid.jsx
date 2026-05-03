@@ -1,12 +1,13 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, InputBase, IconButton, Typography, makeStyles, TextField, Checkbox
+  Paper, InputBase, IconButton, Typography, makeStyles, TextField, Checkbox, Box
 } from '@material-ui/core';
 import { Autocomplete, Alert } from '@material-ui/lab';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import DeleteIcon from '@material-ui/icons/Delete';
+import DragIndicatorIcon from '@material-ui/icons/DragIndicator';
 import http from '../http-common';
 
 const useStyles = makeStyles({
@@ -33,6 +34,19 @@ const useStyles = makeStyles({
     padding: '4px 8px',
     cursor: 'default',
   },
+  dragHandle: {
+    cursor: 'grab',
+    color: 'rgba(0, 0, 0, 0.3)',
+    padding: '4px 2px',
+    width: 30,
+    textAlign: 'center',
+    '&:hover': {
+      color: 'rgba(0, 0, 0, 0.6)',
+    },
+  },
+  dragOver: {
+    borderTop: '2px solid #1976d2',
+  },
 });
 
 let nextId = 1;
@@ -44,6 +58,7 @@ const makeEmptyRow = (members) => ({
   date: todayStr(),
   vendor: '',
   description: '',
+  amountLocal: '',
   amount: '',
   paidBy: '',
   equalSplit: false,
@@ -74,6 +89,48 @@ const computeActualSpends = (amount, splits, members, equalSplit) => {
   }, {});
 };
 
+const computeSettlements = (rows, members) => {
+  const totalPaid = members.reduce((acc, m) => ({ ...acc, [m]: 0 }), {});
+  const totalOwed = members.reduce((acc, m) => ({ ...acc, [m]: 0 }), {});
+
+  for (const row of rows) {
+    const actuals = computeActualSpends(row.amount, row.splits, members, row.equalSplit);
+    for (const m of members) {
+      if (actuals[m] != null) totalOwed[m] += actuals[m];
+    }
+    const amt = parseFloat(row.amount) || 0;
+    if (amt && row.paidBy && members.includes(row.paidBy)) {
+      totalPaid[row.paidBy] += amt;
+    }
+  }
+
+  const balances = members.map(m => ({
+    name: m,
+    balance: Math.round((totalPaid[m] - totalOwed[m]) * 100) / 100,
+  }));
+
+  const debtors = balances.filter(b => b.balance < 0).map(b => ({ ...b }));
+  const creditors = balances.filter(b => b.balance > 0).map(b => ({ ...b }));
+  debtors.sort((a, b) => a.balance - b.balance);
+  creditors.sort((a, b) => b.balance - a.balance);
+
+  const settlements = [];
+  let d = 0, c = 0;
+  while (d < debtors.length && c < creditors.length) {
+    const transfer = Math.min(Math.abs(debtors[d].balance), creditors[c].balance);
+    const rounded = Math.round(transfer * 100) / 100;
+    if (rounded > 0) {
+      settlements.push({ from: debtors[d].name, to: creditors[c].name, amount: rounded });
+    }
+    debtors[d].balance += transfer;
+    creditors[c].balance -= transfer;
+    if (Math.abs(debtors[d].balance) < 0.01) d++;
+    if (Math.abs(creditors[c].balance) < 0.01) c++;
+  }
+
+  return settlements;
+};
+
 const rowToPayload = (row) => {
   const splits = {};
   Object.entries(row.splits).forEach(([k, v]) => {
@@ -84,6 +141,7 @@ const rowToPayload = (row) => {
     date: row.date,
     vendor: row.vendor,
     description: row.description,
+    amountLocal: parseFloat(row.amountLocal) || 0,
     amount: parseFloat(row.amount) || 0,
     paidBy: row.paidBy,
     equalSplit: row.equalSplit,
@@ -91,7 +149,7 @@ const rowToPayload = (row) => {
   };
 };
 
-const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellChange, onCellBlur, onKeyDown, onEnterFromRow, onDelete, onToggleEqual, inputRef, classes }) => {
+const ExpenseRow = ({ row, isDraft, members, isMultiCurrency, editingCell, onCellClick, onCellChange, onCellBlur, onKeyDown, onEnterFromRow, onDelete, onToggleEqual, inputRef, classes, draggingId, dragOverId, onDragStart, onDragOver, onDrop, onDragEnd }) => {
   const isEditing = (field) => editingCell && editingCell.rowId === row.id && editingCell.field === field;
   const acOpenRef = useRef(false);
 
@@ -225,10 +283,29 @@ const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellCha
   const actuals = computeActualSpends(row.amount, row.splits, members, row.equalSplit);
 
   return (
-    <TableRow hover style={{ opacity: isDraft ? 0.5 : 1 }}>
+    <TableRow
+      hover
+      style={{ opacity: isDraft ? 0.5 : draggingId === row.id ? 0.4 : 1 }}
+      className={dragOverId === row.id ? classes.dragOver : undefined}
+      onDragOver={!isDraft ? (e) => { e.preventDefault(); onDragOver(row.id); } : undefined}
+      onDrop={!isDraft ? () => onDrop(row.id) : undefined}
+    >
+      <TableCell
+        className={classes.dragHandle}
+        draggable={!isDraft}
+        onDragStart={!isDraft ? (e) => {
+          e.dataTransfer.effectAllowed = 'move';
+          onDragStart(row.id);
+        } : undefined}
+        onDragEnd={onDragEnd}
+        style={isDraft ? { color: 'transparent', cursor: 'default' } : undefined}
+      >
+        <DragIndicatorIcon fontSize="small" />
+      </TableCell>
       {renderCell('date', row.date, 'date')}
       {renderCell('vendor', row.vendor)}
       {renderCell('description', row.description)}
+      {isMultiCurrency && renderCell('amountLocal', row.amountLocal, 'number')}
       {renderCell('amount', row.amount, 'number')}
       {renderCell('paidBy', row.paidBy)}
       <TableCell
@@ -278,12 +355,15 @@ const ExpenseRow = ({ row, isDraft, members, editingCell, onCellClick, onCellCha
   );
 };
 
-const ExpenseGrid = ({ members, tripId }) => {
+const ExpenseGrid = ({ members, tripId, currency }) => {
   const classes = useStyles();
+  const isMultiCurrency = currency !== 'USD';
   const [rows, setRows] = useState([]);
   const [draftRow, setDraftRow] = useState(() => makeEmptyRow(members));
   const [editingCell, setEditingCell] = useState(null);
   const [saveError, setSaveError] = useState('');
+  const [draggingId, setDraggingId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
   const inputRef = useRef(null);
   const draftRef = useRef(draftRow);
   const editingRef = useRef(editingCell);
@@ -304,6 +384,7 @@ const ExpenseGrid = ({ members, tripId }) => {
           date: doc.date ? doc.date.slice(0, 10) : todayStr(),
           vendor: doc.vendor || '',
           description: doc.description || '',
+          amountLocal: doc.amountLocal ? String(doc.amountLocal) : '',
           amount: doc.amount ? String(doc.amount) : '',
           paidBy: doc.paidBy || '',
           equalSplit: doc.equalSplit || false,
@@ -318,9 +399,14 @@ const ExpenseGrid = ({ members, tripId }) => {
       .catch(() => setSaveError('Failed to load expenses.'));
   }, [tripId, members]);
 
-  const baseFields = ['date', 'vendor', 'description', 'amount', 'paidBy', 'equalSplit'];
-  const splitFields = members.map(m => `split_${m}`);
-  const fullFieldOrder = [...baseFields, ...splitFields];
+  const baseFields = useMemo(() => isMultiCurrency
+    ? ['date', 'vendor', 'description', 'amountLocal', 'amount', 'paidBy', 'equalSplit']
+    : ['date', 'vendor', 'description', 'amount', 'paidBy', 'equalSplit'],
+  [isMultiCurrency]);
+  const fullFieldOrder = useMemo(
+    () => [...baseFields, ...members.map(m => `split_${m}`)],
+    [baseFields, members]
+  );
 
   const getFieldOrder = useCallback((rowId) => {
     const row = rowId === draftRef.current.id
@@ -353,8 +439,8 @@ const ExpenseGrid = ({ members, tripId }) => {
 
   const handleCellChange = useCallback((rowId, field, value) => {
     const update = (row) => {
-      if (field === 'amount') {
-        return { ...row, amount: value };
+      if (field === 'amount' || field === 'amountLocal') {
+        return { ...row, [field]: value };
       }
       if (field.startsWith('split_')) {
         const member = field.replace('split_', '');
@@ -488,8 +574,43 @@ const ExpenseGrid = ({ members, tripId }) => {
     }
   }, [tripId]);
 
+  const handleDragStart = useCallback((rowId) => {
+    setDraggingId(rowId);
+  }, []);
+
+  const handleDragOver = useCallback((rowId) => {
+    setDragOverId(rowId);
+  }, []);
+
+  const handleDrop = useCallback((targetId) => {
+    const fromId = draggingId;
+    setDraggingId(null);
+    setDragOverId(null);
+    if (!fromId || fromId === targetId) return;
+    setRows(prev => {
+      const fromIdx = prev.findIndex(r => r.id === fromId);
+      const toIdx = prev.findIndex(r => r.id === targetId);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+      // Persist new order
+      const orderedIds = next.filter(r => typeof r.id === 'string').map(r => r.id);
+      if (orderedIds.length > 0) {
+        http.put(`/tripApi/trip/${tripId}/expense/reorder`, { orderedIds })
+          .catch(() => setSaveError('Failed to save row order.'));
+      }
+      return next;
+    });
+  }, [draggingId, tripId]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggingId(null);
+    setDragOverId(null);
+  }, []);
+
   return (
-    <Paper style={{ marginTop: 24 }}>
+    <Paper style={{ marginTop: 24, paddingBottom: 200 }}>
       <Typography variant="subtitle1" style={{ fontWeight: 600, padding: '16px 16px 8px' }}>
         Expenses
       </Typography>
@@ -502,10 +623,16 @@ const ExpenseGrid = ({ members, tripId }) => {
         <Table size="small" className={classes.table}>
           <TableHead>
             <TableRow>
+              <TableCell rowSpan={2} style={{ width: 30 }} />
               <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>Date</TableCell>
               <TableCell rowSpan={2} style={{ fontWeight: 600 }}>Vendor</TableCell>
               <TableCell rowSpan={2} style={{ fontWeight: 600 }}>Description</TableCell>
-              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>Amount</TableCell>
+              {isMultiCurrency && (
+                <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>{currency} Amt</TableCell>
+              )}
+              <TableCell rowSpan={2} style={{ fontWeight: 600, width: 100 }}>
+                {isMultiCurrency ? 'USD Amt' : 'Amount'}
+              </TableCell>
               <TableCell rowSpan={2} style={{ fontWeight: 600, width: 110 }}>Paid By</TableCell>
               <TableCell rowSpan={2} style={{ fontWeight: 600, width: 60, textAlign: 'center' }}>Equal?</TableCell>
               <TableCell
@@ -547,6 +674,7 @@ const ExpenseGrid = ({ members, tripId }) => {
                 row={row}
                 isDraft={false}
                 members={members}
+                isMultiCurrency={isMultiCurrency}
                 editingCell={editingCell}
                 onCellClick={handleCellClick}
                 onCellChange={handleCellChange}
@@ -557,6 +685,12 @@ const ExpenseGrid = ({ members, tripId }) => {
                 onToggleEqual={handleToggleEqual}
                 inputRef={inputRef}
                 classes={classes}
+                draggingId={draggingId}
+                dragOverId={dragOverId}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
               />
             ))}
             <ExpenseRow
@@ -564,6 +698,7 @@ const ExpenseGrid = ({ members, tripId }) => {
               row={draftRow}
               isDraft={true}
               members={members}
+              isMultiCurrency={isMultiCurrency}
               editingCell={editingCell}
               onCellClick={handleCellClick}
               onCellChange={handleCellChange}
@@ -574,10 +709,35 @@ const ExpenseGrid = ({ members, tripId }) => {
               onToggleEqual={handleToggleEqual}
               inputRef={inputRef}
               classes={classes}
+              draggingId={draggingId}
+              dragOverId={dragOverId}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
             />
           </TableBody>
         </Table>
       </TableContainer>
+      {rows.length > 0 && (() => {
+        const settlements = computeSettlements(rows, members);
+        return (
+          <Box style={{ padding: '16px 16px 0' }}>
+            <Typography variant="subtitle1" style={{ fontWeight: 600, marginBottom: 8 }}>
+              Settlement
+            </Typography>
+            {settlements.length === 0 ? (
+              <Typography variant="body2" color="textSecondary">All settled up!</Typography>
+            ) : (
+              settlements.map((s, i) => (
+                <Typography key={i} variant="body2" style={{ marginBottom: 4 }}>
+                  <strong>{s.from}</strong> owes <strong>{s.to}</strong> ${s.amount.toFixed(2)}
+                </Typography>
+              ))
+            )}
+          </Box>
+        );
+      })()}
     </Paper>
   );
 };

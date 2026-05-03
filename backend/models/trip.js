@@ -13,6 +13,10 @@ const tripSchema = new Schema({
       message: "A trip must have at least 2 members"
     }
   },
+  currency: {
+    type: String,
+    default: 'USD'
+  },
   status: {
     type: String,
     enum: ["active", "retired"],

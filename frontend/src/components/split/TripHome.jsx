@@ -17,14 +17,22 @@ const TripHome = () => {
 
   // New trip form state
   const [tripName, setTripName] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const [memberInput, setMemberInput] = useState('');
   const [members, setMembers] = useState([]);
+
+  // Active trip member/currency management
+  const [newMemberInput, setNewMemberInput] = useState('');
+  const [currencyInput, setCurrencyInput] = useState('');
+  const [memberSubmitting, setMemberSubmitting] = useState(false);
 
   const fetchActiveTrip = useCallback(() => {
     setLoading(true);
     http.get('/tripApi/trip')
       .then(res => {
-        setTrip(res.data.length > 0 ? res.data[0] : null);
+        const active = res.data.length > 0 ? res.data[0] : null;
+        setTrip(active);
+        if (active) setCurrencyInput(active.currency || 'USD');
         setError('');
       })
       .catch(() => setError('Failed to load trip data.'))
@@ -50,7 +58,7 @@ const TripHome = () => {
   const handleCreateTrip = () => {
     setSubmitting(true);
     setError('');
-    http.post('/tripApi/trip', { name: tripName.trim(), members })
+    http.post('/tripApi/trip', { name: tripName.trim(), currency: currency.toUpperCase() || 'USD', members })
       .then(res => {
         if (res.data.errors) {
           const msgs = Object.values(res.data.errors).join(', ');
@@ -58,6 +66,7 @@ const TripHome = () => {
         } else {
           setTrip(res.data);
           setTripName('');
+          setCurrency('USD');
           setMembers([]);
         }
       })
@@ -75,6 +84,51 @@ const TripHome = () => {
       })
       .catch(() => setError('Failed to retire trip.'))
       .finally(() => setSubmitting(false));
+  };
+
+  const handleAddActiveMember = () => {
+    const name = newMemberInput.trim();
+    if (!name || !trip || trip.members.includes(name)) return;
+    const updated = [...trip.members, name];
+    setMemberSubmitting(true);
+    setError('');
+    http.put(`/tripApi/trip/${trip._id}/members`, { members: updated })
+      .then(res => {
+        setTrip(res.data);
+        setNewMemberInput('');
+      })
+      .catch(err => setError(err.response?.data?.error || 'Failed to add member.'))
+      .finally(() => setMemberSubmitting(false));
+  };
+
+  const handleRemoveActiveMember = (name) => {
+    if (!trip) return;
+    const updated = trip.members.filter(m => m !== name);
+    if (updated.length < 2) {
+      setError('A trip must have at least 2 members.');
+      return;
+    }
+    setMemberSubmitting(true);
+    setError('');
+    http.put(`/tripApi/trip/${trip._id}/members`, { members: updated })
+      .then(res => setTrip(res.data))
+      .catch(err => setError(err.response?.data?.error || 'Failed to remove member.'))
+      .finally(() => setMemberSubmitting(false));
+  };
+
+  const handleSaveCurrency = () => {
+    if (!trip) return;
+    const val = currencyInput.toUpperCase().trim();
+    if (!val || val === (trip.currency || 'USD')) return;
+    setMemberSubmitting(true);
+    setError('');
+    http.put(`/tripApi/trip/${trip._id}/members`, { members: trip.members, currency: val })
+      .then(res => {
+        setTrip(res.data);
+        setCurrencyInput(res.data.currency || 'USD');
+      })
+      .catch(err => setError(err.response?.data?.error || 'Failed to update currency.'))
+      .finally(() => setMemberSubmitting(false));
   };
 
   return (
@@ -110,8 +164,51 @@ const TripHome = () => {
               </Typography>
               <Box style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
                 {trip.members.map(m => (
-                  <Chip key={m} label={m} />
+                  <Chip
+                    key={m}
+                    label={m}
+                    onDelete={() => handleRemoveActiveMember(m)}
+                    disabled={memberSubmitting}
+                  />
                 ))}
+              </Box>
+              <Box style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <TextField
+                  label="Add Member"
+                  variant="outlined"
+                  size="small"
+                  value={newMemberInput}
+                  onChange={e => setNewMemberInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddActiveMember(); } }}
+                  disabled={memberSubmitting}
+                  style={{ flex: 1, maxWidth: 240 }}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleAddActiveMember}
+                  disabled={memberSubmitting || !newMemberInput.trim()}
+                >
+                  Add
+                </Button>
+              </Box>
+              <Box style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+                <TextField
+                  label="Local Currency"
+                  variant="outlined"
+                  size="small"
+                  value={currencyInput}
+                  onChange={e => setCurrencyInput(e.target.value.toUpperCase())}
+                  inputProps={{ maxLength: 3 }}
+                  disabled={memberSubmitting}
+                  style={{ width: 120 }}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleSaveCurrency}
+                  disabled={memberSubmitting || !currencyInput.trim() || currencyInput.toUpperCase() === (trip.currency || 'USD')}
+                >
+                  Save
+                </Button>
               </Box>
               <Button
                 variant="outlined"
@@ -123,7 +220,7 @@ const TripHome = () => {
                 {submitting ? 'Retiring...' : 'Retire Trip'}
               </Button>
             </Paper>
-            <ExpenseGrid members={trip.members} tripId={trip._id} />
+            <ExpenseGrid members={trip.members} tripId={trip._id} currency={trip.currency || 'USD'} />
           </>
         ) : (
           <Paper style={{ padding: 24 }}>
@@ -137,6 +234,15 @@ const TripHome = () => {
               value={tripName}
               onChange={e => setTripName(e.target.value)}
               style={{ marginBottom: 16 }}
+            />
+            <TextField
+              label="Currency"
+              variant="outlined"
+              value={currency}
+              onChange={e => setCurrency(e.target.value.toUpperCase())}
+              inputProps={{ maxLength: 3 }}
+              helperText="3-letter code (e.g. USD, EUR, CAD)"
+              style={{ marginBottom: 16, width: 200 }}
             />
             <Box style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
               <TextField
