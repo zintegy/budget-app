@@ -16,7 +16,9 @@ const LoginScreen = ({ onLogin }) => {
     setLoading(true);
     try {
       const baseURL = process.env.REACT_APP_API_BASE_URL || '';
-      const res = await axios.post(`${baseURL}/authApi/verify`, { password });
+      const res = await axios.post(`${baseURL}/authApi/verify`, { password }, {
+        headers: { 'ngrok-skip-browser-warning': '123' }
+      });
       localStorage.setItem('token', res.data.token);
       onLogin();
     } catch (err) {
